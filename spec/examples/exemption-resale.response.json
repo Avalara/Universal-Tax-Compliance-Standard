@@ -1,0 +1,9 @@
+{
+  "certificate_id": "EXM-OH-7781",
+  "valid": true,
+  "status": "valid",
+  "exemption_type": "resale",
+  "expiration_date": "2027-12-31",
+  "jurisdictions_covered": ["US-OH"],
+  "message": "Resale certificate on file and valid for Ohio."
+}

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Jurisdiction Resolution Request",
+  "description": "Request body for POST /jurisdictions/resolve. An address, either a text address or geocoordinates. The provider resolves taxing jurisdictions from this input and MUST reject an address it cannot resolve with UTCS-4001.",
+  "allOf": [{ "$ref": "common/address.schema.json" }]
+}

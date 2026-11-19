@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/classification-result.schema.json",
+  "title": "Classification Result",
+  "description": "Response body for POST /tax-codes/classify. The provider's tax-code mapping for each product, with a confidence score.",
+  "type": "object",
+  "properties": {
+    "classifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": { "type": "string" },
+          "item_code": { "type": "string" },
+          "tax_code": { "type": "string" },
+          "tax_code_description": { "type": "string" },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Classification confidence from 0.0 to 1.0. Natural-language classifications may score lower."
+          },
+          "alternative_codes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "tax_code": { "type": "string" },
+                "tax_code_description": { "type": "string" },
+                "confidence": { "type": "number" }
+              }
+            }
+          }
+        },
+        "required": ["tax_code", "tax_code_description", "confidence"]
+      }
+    }
+  },
+  "required": ["classifications"]
+}

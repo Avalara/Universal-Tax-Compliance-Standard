@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/transaction-context.schema.json",
+  "title": "UTCS Transaction Context",
+  "description": "The canonical input to all UTCS tax determination operations. Describes the commerce transaction for which tax compliance is being requested. Supports flexible ingestion through Input Profiles.",
+  "type": "object",
+  "properties": {
+    "profile": {
+      "type": "string",
+      "description": "Input profile being used. If omitted, 'utcs-standard' is assumed.",
+      "default": "utcs-standard"
+    },
+    "document_type": {
+      "type": "string",
+      "description": "Transaction type. Providers MUST reject unrecognized values with UTCS-3002.",
+      "enum": ["sale", "return", "purchase_order", "inventory_transfer", "reverse_charge", "customs", "void"]
+    },
+    "document_code": {
+      "type": "string",
+      "description": "Unique identifier in the caller's system. Used for idempotency and reconciliation. RECOMMENDED for all requests, REQUIRED for committed transactions."
+    },
+    "company_code": {
+      "type": "string",
+      "description": "Identifier of the selling entity (company) the transaction belongs to. Routes the transaction to the correct registered entity within the provider account, which determines nexus, registration, and where the tax is reported. Distinct from business_identification_no, which is that entity's tax registration number."
+    },
+    "transaction_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 datetime of the transaction. Determines applicable rates and rules. Dates outside the provider's supported range are rejected with UTCS-4004."
+    },
+    "currency_code": {
+      "type": "string",
+      "description": "ISO 4217 currency code for all monetary amounts in this transaction.",
+      "pattern": "^[A-Z]{3}$",
+      "minLength": 3,
+      "maxLength": 3
+    },
+    "commit": {
+      "type": "boolean",
+      "description": "true = the transaction is committed (final). false = estimate only. The provider records committed transactions for its own downstream reporting and filing; uncommitted calculations can be recalculated freely."
+    },
+    "entity_type": {
+      "type": "string",
+      "description": "Relationship type of the transaction parties. Providers MUST reject unrecognized values with UTCS-3002.",
+      "enum": ["b2c", "b2b", "b2g"]
+    },
+    "customer": {
+      "type": "object",
+      "description": "Customer details including identifiers, entity type, tax IDs, and exemption credentials.",
+      "properties": {
+        "customer_code": {
+          "type": "string",
+          "description": "Unique customer identifier in the caller's system."
+        },
+        "tax_registration_ids": {
+          "type": "array",
+          "description": "Customer's tax registration numbers (VAT IDs, GST numbers, etc.).",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Type of registration (e.g., vat, gst, ein, sst)."
+              },
+              "value": {
+                "type": "string",
+                "description": "The registration number."
+              },
+              "jurisdiction": {
+                "type": "string",
+                "description": "Jurisdiction the registration applies to."
+              }
+            },
+            "required": ["type", "value"]
+          }
+        },
+        "exemption_certificate_id": {
+          "type": "string",
+          "description": "Reference to an exemption certificate on file with the provider."
+        },
+        "entity_use_code": {
+          "type": "string",
+          "description": "Entity/use-based exemption reason asserting the buyer is exempt by status or intended use (e.g., government, charitable, resale), independent of a certificate on file. Applies to the whole transaction unless a line overrides it. Uses the same controlled vocabulary as the result exemption_reason. A certificate, when present, is supplied via exemption_certificate_id.",
+          "enum": ["resale", "government", "charitable_nonprofit", "religious_educational", "agricultural_production", "industrial_production", "direct_pay", "direct_mail", "foreign_diplomat", "export", "intra_community_supply", "other"]
+        }
+      }
+    },
+    "addresses": {
+      "type": "object",
+      "description": "Transaction addresses. ship_from and ship_to are REQUIRED, OR single_location for point-of-sale. Providers MUST reject missing required addresses with UTCS-3001.",
+      "properties": {
+        "ship_from": {
+          "$ref": "common/address.schema.json",
+          "description": "Origin address. REQUIRED unless single_location is provided."
+        },
+        "ship_to": {
+          "$ref": "common/address.schema.json",
+          "description": "Destination address. REQUIRED unless single_location is provided."
+        },
+        "single_location": {
+          "$ref": "common/address.schema.json",
+          "description": "For point-of-sale transactions where origin and destination are the same location."
+        },
+        "point_of_order_acceptance": {
+          "$ref": "common/address.schema.json",
+          "description": "Where the order was accepted. Relevant for US tangible personal property sourcing."
+        },
+        "point_of_order_origin": {
+          "$ref": "common/address.schema.json",
+          "description": "Where the order originated. Relevant for US tangible personal property sourcing."
+        },
+        "goods_place_or_service_rendered": {
+          "$ref": "common/address.schema.json",
+          "description": "Place of supply for VAT transactions."
+        },
+        "import": {
+          "$ref": "common/address.schema.json",
+          "description": "Import address for VAT import scenarios."
+        },
+        "bill_to": {
+          "$ref": "common/address.schema.json",
+          "description": "Billing address. Required for India GST scenarios."
+        }
+      },
+      "oneOf": [
+        {
+          "required": ["ship_from", "ship_to"]
+        },
+        {
+          "required": ["single_location"]
+        }
+      ]
+    },
+    "lines": {
+      "type": "array",
+      "description": "Line items. MUST contain at least one item. Empty arrays are rejected with UTCS-3001.",
+      "items": {
+        "$ref": "common/line-item.schema.json"
+      },
+      "minItems": 1
+    },
+    "discount": {
+      "type": "string",
+      "description": "Transaction-level discount amount as a decimal string. Allocated across lines flagged discounted. Affects taxability in jurisdictions that tax discounted vs. original prices differently.",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "marketplace": {
+      "type": "object",
+      "description": "Marketplace facilitator context. Present when a marketplace facilitator is involved and may be the party liable to collect and remit tax. Determines which party the provider treats as responsible for the tax.",
+      "properties": {
+        "facilitated": {
+          "type": "boolean",
+          "description": "true if a marketplace facilitator is involved in this transaction."
+        },
+        "liable_party": {
+          "type": "string",
+          "description": "Party responsible for collecting and remitting the tax.",
+          "enum": ["marketplace_facilitator", "seller"]
+        },
+        "facilitator_id": {
+          "type": "string",
+          "description": "Identifier of the marketplace facilitator (e.g., its tax registration or platform identifier)."
+        }
+      },
+      "required": ["facilitated", "liable_party"],
+      "additionalProperties": false
+    },
+    "business_identification_no": {
+      "type": "string",
+      "description": "The selling entity's VAT/GST tax registration number. REQUIRED for B2B transactions in VAT/GST jurisdictions. Determines reverse charge applicability and zero-rating eligibility. For routing to the selling entity, use company_code."
+    },
+    "reference_code": {
+      "type": "string",
+      "description": "Optional reference to a related document or external system. For a return or adjustment, set this to the original transaction's document_code so the provider can reverse the original tax. Also carries general cross-references for audit."
+    },
+    "purchase_order_number": {
+      "type": "string",
+      "description": "Buyer's purchase order number. Optional. Carried for audit and e-invoicing; does not affect tax determination."
+    },
+    "exchange_rate": {
+      "type": "number",
+      "description": "Currency exchange rate from currency_code to reporting currency. REQUIRED when invoicing currency differs from the jurisdiction's reporting currency. Defaults to 1.0.",
+      "default": 1.0,
+      "exclusiveMinimum": 0
+    },
+    "exchange_rate_currency_code": {
+      "type": "string",
+      "description": "ISO 4217 three-character reporting currency code. REQUIRED when exchange_rate is provided.",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "delivery_terms": {
+      "type": "string",
+      "description": "Incoterms (ICC Incoterms 2020) governing delivery. For cross-border transactions this determines which party bears import tax and duty: DDP places import VAT/GST and duty on the seller; other terms place them on the buyer as importer of record.",
+      "enum": ["EXW", "FCA", "CPT", "CIP", "DAP", "DPU", "DDP", "FAS", "FOB", "CFR", "CIF"]
+    },
+    "is_seller_importer_of_record": {
+      "type": "boolean",
+      "description": "For cross-border transactions, true when the seller acts as the importer of record and is therefore liable for import taxes and duties. When omitted, the provider infers liability from delivery_terms."
+    },
+    "tax_override": {
+      "type": "object",
+      "description": "Override tax calculation behavior for returns, imported amounts, and accrual scenarios.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of override.",
+          "enum": ["tax_date", "tax_amount", "exemption"]
+        },
+        "value": {
+          "type": "string",
+          "description": "Override value. For tax_date: ISO 8601 date. For tax_amount: decimal string. For exemption: exemption reason code."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Human-readable reason for the override. Required for audit trail."
+        }
+      },
+      "required": ["type", "value", "reason"]
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Key-value pairs for protocol-specific or provider-specific metadata.",
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "document_type",
+    "transaction_date",
+    "currency_code",
+    "commit",
+    "entity_type",
+    "addresses",
+    "lines"
+  ],
+  "additionalProperties": false
+}

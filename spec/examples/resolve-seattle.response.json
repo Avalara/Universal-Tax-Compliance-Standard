@@ -1,0 +1,38 @@
+{
+  "address_resolved": {
+    "line1": "512 Pike St",
+    "city": "Seattle",
+    "region": "WA",
+    "postal_code": "98101",
+    "country": "US"
+  },
+  "jurisdictions": [
+    {
+      "jurisdiction_type": "country",
+      "jurisdiction_code": "US",
+      "jurisdiction_name": "UNITED STATES",
+      "tax_types": ["sales_tax", "use_tax"]
+    },
+    {
+      "jurisdiction_type": "state",
+      "jurisdiction_code": "53",
+      "jurisdiction_name": "WASHINGTON",
+      "tax_types": ["sales_tax", "use_tax"],
+      "parent_jurisdiction_code": "US"
+    },
+    {
+      "jurisdiction_type": "county",
+      "jurisdiction_code": "033",
+      "jurisdiction_name": "KING COUNTY",
+      "tax_types": ["sales_tax"],
+      "parent_jurisdiction_code": "53"
+    },
+    {
+      "jurisdiction_type": "city",
+      "jurisdiction_code": "5363000",
+      "jurisdiction_name": "SEATTLE",
+      "tax_types": ["sales_tax"],
+      "parent_jurisdiction_code": "033"
+    }
+  ]
+}

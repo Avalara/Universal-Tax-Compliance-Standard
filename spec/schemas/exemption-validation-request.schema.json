@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/exemption-validation-request.schema.json",
+  "title": "Exemption Validation Request",
+  "description": "Request body for POST /exemptions/validate. Validates an exemption credential already on file with the provider. Failure uses UTCS-5xxx and MUST NOT be reported as a successful zero-tax determination.",
+  "type": "object",
+  "properties": {
+    "certificate_id": {
+      "type": "string",
+      "description": "Exemption certificate identifier on file with the provider."
+    },
+    "customer_code": { "type": "string" },
+    "jurisdiction": {
+      "type": "string",
+      "description": "Jurisdiction to validate the exemption against."
+    },
+    "product_tax_code": {
+      "type": "string",
+      "description": "Tax code of the product to check exemption applicability."
+    },
+    "transaction_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date to check validity against."
+    }
+  },
+  "required": ["certificate_id", "jurisdiction"]
+}

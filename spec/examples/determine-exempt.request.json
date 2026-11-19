@@ -1,0 +1,43 @@
+{
+  "profile": "utcs-standard",
+  "document_type": "sale",
+  "document_code": "SO-77810",
+  "transaction_date": "2026-03-16T13:40:00Z",
+  "currency_code": "USD",
+  "commit": false,
+  "entity_type": "b2b",
+  "customer": {
+    "customer_code": "RESELLER-204",
+    "tax_registration_ids": [
+      { "type": "sst", "value": "S012345678", "jurisdiction": "OH" }
+    ],
+    "exemption_certificate_id": "EXM-OH-7781",
+    "entity_use_code": "resale"
+  },
+  "addresses": {
+    "ship_from": {
+      "line1": "300 Spruce St",
+      "city": "Columbus",
+      "region": "OH",
+      "postal_code": "43215",
+      "country": "US"
+    },
+    "ship_to": {
+      "line1": "55 E Gay St",
+      "city": "Columbus",
+      "region": "OH",
+      "postal_code": "43215",
+      "country": "US"
+    }
+  },
+  "lines": [
+    {
+      "line_number": "1",
+      "quantity": 10,
+      "amount": "500.00",
+      "item_code": "BULK-RESALE-SKU",
+      "description": "Wholesale inventory purchased for resale",
+      "tax_code": "P0000000"
+    }
+  ]
+}

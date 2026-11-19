@@ -1,0 +1,19 @@
+{
+  "name": "utcs-spec",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "UTCS v1.0 specification artifacts and conformance validator.",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "validate": "node scripts/validate.mjs"
+  },
+  "devDependencies": {
+    "@redocly/openapi-core": "^2.80.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "yaml": "^2.5.1"
+  }
+}

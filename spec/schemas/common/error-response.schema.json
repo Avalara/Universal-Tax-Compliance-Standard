@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/common/error-response.schema.json",
+  "title": "UTCS Error Response",
+  "description": "Three-layer error response: structured code, human-readable message, and machine-actionable recovery hints. UTCS never returns approximate tax or fallback rates — if accurate tax cannot be determined, the response is an error.",
+  "type": "object",
+  "properties": {
+    "error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Hierarchical UTCS error code.",
+          "pattern": "^UTCS-[0-9]{4}$",
+          "enum": [
+            "UTCS-1001", "UTCS-1002", "UTCS-1003",
+            "UTCS-2001", "UTCS-2002",
+            "UTCS-3001", "UTCS-3002", "UTCS-3003", "UTCS-3004",
+            "UTCS-4001", "UTCS-4002", "UTCS-4003", "UTCS-4004",
+            "UTCS-5001", "UTCS-5002", "UTCS-5003", "UTCS-5004",
+            "UTCS-6001", "UTCS-6002",
+            "UTCS-7001", "UTCS-7002", "UTCS-7003",
+            "UTCS-8001", "UTCS-8002"
+          ]
+        },
+        "category": {
+          "type": "string",
+          "description": "Error category derived from the code prefix.",
+          "enum": [
+            "service",
+            "authentication",
+            "input",
+            "tax_resolution",
+            "exemption",
+            "document",
+            "cross_border",
+            "elr"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable error description. Clear enough for logging, debugging, and (where appropriate) display to end-users."
+        },
+        "recovery": {
+          "type": "object",
+          "description": "Structured guidance for resolving the error. Designed for AI agent consumption.",
+          "properties": {
+            "action": {
+              "type": "string",
+              "description": "The recommended recovery action.",
+              "enum": [
+                "provide_additional_data",
+                "retry",
+                "retry_or_block",
+                "use_alternative_capability",
+                "contact_provider",
+                "not_recoverable"
+              ]
+            },
+            "required_fields": {
+              "type": "array",
+              "description": "Fields that must be provided to resolve the error.",
+              "items": { "type": "string" }
+            },
+            "optional_fields": {
+              "type": "array",
+              "description": "Fields that would improve results if provided.",
+              "items": { "type": "string" }
+            },
+            "suggestion": {
+              "type": "string",
+              "description": "Natural-language suggestion for resolution."
+            },
+            "retry_after_seconds": {
+              "type": "integer",
+              "description": "Seconds to wait before retrying. Present for retry and retry_or_block actions.",
+              "minimum": 0
+            },
+            "compliance_warning": {
+              "type": "string",
+              "description": "Explicit description of compliance risks if the transaction proceeds without tax determination. REQUIRED for service unavailability errors."
+            },
+            "transaction_flag": {
+              "type": "string",
+              "description": "Suggested flag to apply to the transaction if proceeding without determination (e.g., TAX_DETERMINATION_PENDING)."
+            }
+          },
+          "required": ["action"]
+        }
+      },
+      "required": ["code", "category", "message", "recovery"]
+    }
+  },
+  "required": ["error"],
+  "additionalProperties": false
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/common/line-item.schema.json",
+  "title": "UTCS Line Item",
+  "description": "Line item within a Transaction Context. All monetary values are decimal strings to avoid floating-point precision issues.",
+  "type": "object",
+  "properties": {
+    "line_number": {
+      "type": "string",
+      "description": "Unique identifier within the transaction. MUST be unique across all lines."
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Quantity of the item. Decimal permitted for measured goods. MUST be non-zero. Negative quantities permitted only when document_type is 'return'.",
+      "not": { "const": 0 }
+    },
+    "amount": {
+      "type": "string",
+      "description": "Total monetary amount for this line as a decimal string (e.g., \"49.99\"). MUST NOT be a bare numeric type.",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "item_code": {
+      "type": "string",
+      "description": "Merchant's product identifier (SKU, UPC, etc.)."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description. Used for natural-language classification when tax_code is not provided."
+    },
+    "tax_code": {
+      "type": "string",
+      "description": "Tax code for the line. Accepts a standardized or provider-specific custom value. Input HINT only; the provider may override. If omitted, the provider may classify from item_code and description."
+    },
+    "tax_included": {
+      "type": "boolean",
+      "description": "If true, the amount includes tax. Default: false.",
+      "default": false
+    },
+    "discounted": {
+      "type": "boolean",
+      "description": "If true, the transaction-level discount is allocated to this line. Providers allocate the document discount only across lines flagged discounted. Default: false.",
+      "default": false
+    },
+    "hs_code": {
+      "type": "string",
+      "description": "Harmonized System (HS) tariff code. REQUIRED when cross-border@1.0 capability is invoked."
+    },
+    "revenue_account": {
+      "type": "string",
+      "description": "GL account code. Some jurisdictions have account-based taxability rules."
+    },
+    "entity_use_code": {
+      "type": "string",
+      "description": "Per-line entity/use-based exemption reason, overriding the customer-level entity_use_code for this line. Asserts the line is exempt by buyer status or intended use rather than a certificate. Same controlled vocabulary as the result exemption_reason.",
+      "enum": ["resale", "government", "charitable_nonprofit", "religious_educational", "agricultural_production", "industrial_production", "direct_pay", "direct_mail", "foreign_diplomat", "export", "intra_community_supply", "other"]
+    },
+    "exemption_certificate_id": {
+      "type": "string",
+      "description": "Per-line exemption certificate identifier, overriding the customer-level exemption_certificate_id for this line. Use when only specific lines are covered by a certificate."
+    },
+    "addresses": {
+      "type": "object",
+      "description": "Per-line address override for split-origin or drop-ship fulfillment. When present, these override the transaction-level addresses for this line only.",
+      "properties": {
+        "ship_from": {
+          "$ref": "address.schema.json",
+          "description": "Line-level origin address. Overrides the transaction ship_from for this line."
+        },
+        "ship_to": {
+          "$ref": "address.schema.json",
+          "description": "Line-level destination address. Overrides the transaction ship_to for this line."
+        }
+      },
+      "additionalProperties": false
+    },
+    "tax_override": {
+      "type": "object",
+      "description": "Per-line override of the tax calculation for this line only (overrides any transaction-level tax_override for this line). Used for line-specific tax-date, forced tax amount, or exemption scenarios such as imported amounts and accruals.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of override.",
+          "enum": ["tax_date", "tax_amount", "exemption"]
+        },
+        "value": {
+          "type": "string",
+          "description": "Override value. For tax_date: ISO 8601 date. For tax_amount: decimal string. For exemption: exemption reason code."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Human-readable reason for the override. Required for audit trail."
+        }
+      },
+      "required": ["type", "value", "reason"]
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Per-line key-value pairs for provider-specific or capability-specific metadata (e.g., exemption codes, marketplace liability indicators, product category hints).",
+      "additionalProperties": true
+    }
+  },
+  "required": ["line_number", "quantity", "amount"],
+  "additionalProperties": false
+}

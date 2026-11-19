@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/common/attestation.schema.json",
+  "title": "UTCS Provider Attestation",
+  "description": "Every UTCS response includes an attestation block identifying who calculated the tax, using what content, and when. Ensures auditability.",
+  "type": "object",
+  "properties": {
+    "provider_id": {
+      "type": "string",
+      "description": "Unique identifier of the UTCS provider."
+    },
+    "provider_name": {
+      "type": "string",
+      "description": "Human-readable provider name."
+    },
+    "content_version": {
+      "type": "string",
+      "description": "Version of the tax content/rules database used for this calculation."
+    },
+    "calculation_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when the calculation was performed."
+    },
+    "engine_version": {
+      "type": "string",
+      "description": "Version of the provider's calculation engine."
+    },
+    "signature": {
+      "type": "string",
+      "description": "Optional digital signature over the response payload. Enables cryptographic verification of the result."
+    }
+  },
+  "required": [
+    "provider_id",
+    "provider_name",
+    "content_version",
+    "calculation_timestamp",
+    "engine_version"
+  ],
+  "additionalProperties": false
+}

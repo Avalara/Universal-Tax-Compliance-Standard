@@ -1,0 +1,166 @@
+{
+  "result_id": "res_7b1e5a9c34",
+  "document_code": "SO-100548",
+  "status": "calculated",
+  "total_tax": "9.12",
+  "total_taxable": "100.00",
+  "total_exempt": "0.00",
+  "total_non_taxable": "0.00",
+  "total_amount": "100.00",
+  "currency_code": "USD",
+  "lines": [
+    {
+      "line_number": "1",
+      "tax_amount": "8.81",
+      "taxable_amount": "100.00",
+      "exempt_amount": "0.00",
+      "non_taxable_amount": "0.00",
+      "tax_code": "P0000000",
+      "tax_code_description": "Tangible personal property",
+      "jurisdictions": [
+        {
+          "jurisdiction_type": "state",
+          "jurisdiction_code": "08",
+          "jurisdiction_code_system": "fips",
+          "jurisdiction_name": "COLORADO",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "fee_basis": "ad_valorem",
+          "rate": "0.029",
+          "taxable_amount": "100.00",
+          "tax_amount": "2.90",
+          "rate_rule_id": "CO-STATE-0290",
+          "exemption_applied": null
+        },
+        {
+          "jurisdiction_type": "city",
+          "jurisdiction_code": "0820000",
+          "jurisdiction_code_system": "fips",
+          "jurisdiction_name": "DENVER",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "fee_basis": "ad_valorem",
+          "rate": "0.0481",
+          "taxable_amount": "100.00",
+          "tax_amount": "4.81",
+          "rate_rule_id": "CO-DENVER-0481",
+          "exemption_applied": null
+        },
+        {
+          "jurisdiction_type": "special",
+          "jurisdiction_code": "CO-RTD",
+          "jurisdiction_code_system": "provider-defined",
+          "jurisdiction_name": "REGIONAL TRANSPORTATION DISTRICT",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "fee_basis": "ad_valorem",
+          "rate": "0.01",
+          "taxable_amount": "100.00",
+          "tax_amount": "1.00",
+          "rate_rule_id": "CO-RTD-0100",
+          "exemption_applied": null
+        },
+        {
+          "jurisdiction_type": "special",
+          "jurisdiction_code": "CO-SCFD",
+          "jurisdiction_code_system": "provider-defined",
+          "jurisdiction_name": "SCIENTIFIC AND CULTURAL FACILITIES DISTRICT",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "fee_basis": "ad_valorem",
+          "rate": "0.001",
+          "taxable_amount": "100.00",
+          "tax_amount": "0.10",
+          "rate_rule_id": "CO-SCFD-0010",
+          "exemption_applied": null
+        }
+      ]
+    },
+    {
+      "line_number": "2",
+      "tax_amount": "0.31",
+      "taxable_amount": "0.00",
+      "exempt_amount": "0.00",
+      "non_taxable_amount": "0.00",
+      "tax_code": "OF400000",
+      "tax_code_description": "Colorado retail delivery fee",
+      "jurisdictions": [
+        {
+          "jurisdiction_type": "state",
+          "jurisdiction_code": "08",
+          "jurisdiction_code_system": "fips",
+          "jurisdiction_name": "COLORADO",
+          "tax_type": "environmental_fee",
+          "fee_basis": "flat",
+          "taxable_amount": "0.00",
+          "tax_amount": "0.31",
+          "rate_rule_id": "CO-RDF-2026",
+          "exemption_applied": null
+        }
+      ]
+    }
+  ],
+  "jurisdictions": [
+    {
+      "jurisdiction_type": "state",
+      "jurisdiction_code": "08",
+      "jurisdiction_code_system": "fips",
+      "jurisdiction_name": "COLORADO",
+      "tax_type": "sales_tax",
+      "taxable_amount": "100.00",
+      "tax_amount": "2.90"
+    },
+    {
+      "jurisdiction_type": "city",
+      "jurisdiction_code": "0820000",
+      "jurisdiction_code_system": "fips",
+      "jurisdiction_name": "DENVER",
+      "tax_type": "sales_tax",
+      "taxable_amount": "100.00",
+      "tax_amount": "4.81"
+    },
+    {
+      "jurisdiction_type": "special",
+      "jurisdiction_code": "CO-RTD",
+      "jurisdiction_code_system": "provider-defined",
+      "jurisdiction_name": "REGIONAL TRANSPORTATION DISTRICT",
+      "tax_type": "sales_tax",
+      "taxable_amount": "100.00",
+      "tax_amount": "1.00"
+    },
+    {
+      "jurisdiction_type": "special",
+      "jurisdiction_code": "CO-SCFD",
+      "jurisdiction_code_system": "provider-defined",
+      "jurisdiction_name": "SCIENTIFIC AND CULTURAL FACILITIES DISTRICT",
+      "tax_type": "sales_tax",
+      "taxable_amount": "100.00",
+      "tax_amount": "0.10"
+    },
+    {
+      "jurisdiction_type": "state",
+      "jurisdiction_code": "08",
+      "jurisdiction_code_system": "fips",
+      "jurisdiction_name": "COLORADO",
+      "tax_type": "environmental_fee",
+      "taxable_amount": "0.00",
+      "tax_amount": "0.31"
+    }
+  ],
+  "messages": [
+    {
+      "severity": "info",
+      "code": "CO-RETAIL-DELIVERY-FEE",
+      "summary": "Colorado retail delivery fee applied as a flat statutory amount of 0.31 USD per retail delivery, independent of order value. The fee is reported with fee_basis 'flat' and carries no rate.",
+      "refers_to": "lines[1]",
+      "source": "fee_rule"
+    }
+  ],
+  "attestation": {
+    "provider_id": "example-tax",
+    "provider_name": "Example Tax Provider",
+    "content_version": "2026.07.1",
+    "calculation_timestamp": "2026-07-15T10:30:02Z",
+    "engine_version": "utcs-engine/4.2.0"
+  }
+}

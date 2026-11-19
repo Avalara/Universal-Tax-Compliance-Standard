@@ -1,0 +1,41 @@
+{
+  "profile": "utcs-standard",
+  "document_type": "sale",
+  "document_code": "SO-100432",
+  "company_code": "AVA-RETAIL-US",
+  "transaction_date": "2026-03-14T16:20:00Z",
+  "currency_code": "USD",
+  "commit": false,
+  "entity_type": "b2c",
+  "customer": {
+    "customer_code": "CUST-5567"
+  },
+  "addresses": {
+    "ship_from": {
+      "line1": "512 S Mangum St",
+      "line2": "Suite 100",
+      "city": "Durham",
+      "region": "NC",
+      "postal_code": "27701",
+      "country": "US",
+      "location_code": "STORE-NC-014"
+    },
+    "ship_to": {
+      "line1": "98 San Jacinto Blvd",
+      "city": "Austin",
+      "region": "TX",
+      "postal_code": "78701",
+      "country": "US"
+    }
+  },
+  "lines": [
+    {
+      "line_number": "1",
+      "quantity": 1,
+      "amount": "100.00",
+      "item_code": "WIDGET-BLUE",
+      "description": "Blue stainless steel widget",
+      "tax_code": "P0000000"
+    }
+  ]
+}

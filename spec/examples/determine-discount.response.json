@@ -1,0 +1,152 @@
+{
+  "result_id": "res_3d7e9c2f10",
+  "document_code": "SO-100455",
+  "status": "calculated",
+  "total_tax": "26.40",
+  "total_taxable": "320.00",
+  "total_exempt": "0.00",
+  "total_non_taxable": "0.00",
+  "total_discount": "80.00",
+  "total_amount": "400.00",
+  "currency_code": "USD",
+  "lines": [
+    {
+      "line_number": "1",
+      "tax_amount": "6.60",
+      "taxable_amount": "80.00",
+      "exempt_amount": "0.00",
+      "non_taxable_amount": "0.00",
+      "discount_amount": "20.00",
+      "tax_code": "P0000000",
+      "tax_code_description": "Tangible personal property",
+      "jurisdictions": [
+        {
+          "jurisdiction_type": "state",
+          "jurisdiction_code": "48",
+          "jurisdiction_code_system": "fips",
+          "jurisdiction_name": "TEXAS",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "rate": "0.0625",
+          "taxable_amount": "80.00",
+          "tax_amount": "5.00",
+          "rate_rule_id": "TX-STATE-0625",
+          "exemption_applied": null
+        },
+        {
+          "jurisdiction_type": "city",
+          "jurisdiction_code": "4805000",
+          "jurisdiction_code_system": "fips",
+          "jurisdiction_name": "AUSTIN",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "rate": "0.01",
+          "taxable_amount": "80.00",
+          "tax_amount": "0.80",
+          "rate_rule_id": "TX-AUSTIN-0100",
+          "exemption_applied": null
+        },
+        {
+          "jurisdiction_type": "special",
+          "jurisdiction_code": "TX-AUSTIN-MTA",
+          "jurisdiction_code_system": "provider-defined",
+          "jurisdiction_name": "AUSTIN MTA TRANSIT",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "rate": "0.01",
+          "taxable_amount": "80.00",
+          "tax_amount": "0.80",
+          "rate_rule_id": "TX-AUSTINMTA-0100",
+          "exemption_applied": null
+        }
+      ]
+    },
+    {
+      "line_number": "2",
+      "tax_amount": "19.80",
+      "taxable_amount": "240.00",
+      "exempt_amount": "0.00",
+      "non_taxable_amount": "0.00",
+      "discount_amount": "60.00",
+      "tax_code": "P0000000",
+      "tax_code_description": "Tangible personal property",
+      "jurisdictions": [
+        {
+          "jurisdiction_type": "state",
+          "jurisdiction_code": "48",
+          "jurisdiction_code_system": "fips",
+          "jurisdiction_name": "TEXAS",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "rate": "0.0625",
+          "taxable_amount": "240.00",
+          "tax_amount": "15.00",
+          "rate_rule_id": "TX-STATE-0625",
+          "exemption_applied": null
+        },
+        {
+          "jurisdiction_type": "city",
+          "jurisdiction_code": "4805000",
+          "jurisdiction_code_system": "fips",
+          "jurisdiction_name": "AUSTIN",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "rate": "0.01",
+          "taxable_amount": "240.00",
+          "tax_amount": "2.40",
+          "rate_rule_id": "TX-AUSTIN-0100",
+          "exemption_applied": null
+        },
+        {
+          "jurisdiction_type": "special",
+          "jurisdiction_code": "TX-AUSTIN-MTA",
+          "jurisdiction_code_system": "provider-defined",
+          "jurisdiction_name": "AUSTIN MTA TRANSIT",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "rate": "0.01",
+          "taxable_amount": "240.00",
+          "tax_amount": "2.40",
+          "rate_rule_id": "TX-AUSTINMTA-0100",
+          "exemption_applied": null
+        }
+      ]
+    }
+  ],
+  "jurisdictions": [
+    {
+      "jurisdiction_type": "state",
+      "jurisdiction_code": "48",
+      "jurisdiction_code_system": "fips",
+      "jurisdiction_name": "TEXAS",
+      "tax_type": "sales_tax",
+      "taxable_amount": "320.00",
+      "tax_amount": "20.00"
+    },
+    {
+      "jurisdiction_type": "city",
+      "jurisdiction_code": "4805000",
+      "jurisdiction_code_system": "fips",
+      "jurisdiction_name": "AUSTIN",
+      "tax_type": "sales_tax",
+      "taxable_amount": "320.00",
+      "tax_amount": "3.20"
+    },
+    {
+      "jurisdiction_type": "special",
+      "jurisdiction_code": "TX-AUSTIN-MTA",
+      "jurisdiction_code_system": "provider-defined",
+      "jurisdiction_name": "AUSTIN MTA TRANSIT",
+      "tax_type": "sales_tax",
+      "taxable_amount": "320.00",
+      "tax_amount": "3.20"
+    }
+  ],
+  "attestation": {
+    "provider_id": "example-tax",
+    "provider_name": "Example Tax Provider",
+    "content_version": "2026.04.1",
+    "calculation_timestamp": "2026-04-02T16:20:05Z",
+    "engine_version": "utcs-engine/4.2.0"
+  }
+}

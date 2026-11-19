@@ -1,0 +1,24 @@
+{
+  "classifications": [
+    {
+      "description": "Organic fair-trade coffee beans, 2 lb bag",
+      "item_code": "SKU-COFFEE-ORG-2LB",
+      "tax_code": "PF050001",
+      "tax_code_description": "Food for home consumption",
+      "confidence": 0.94
+    },
+    {
+      "description": "Infant formula, milk-based, 12.5 oz powder",
+      "tax_code": "PF050101",
+      "tax_code_description": "Infant formula",
+      "confidence": 0.88,
+      "alternative_codes": [
+        {
+          "tax_code": "PF050001",
+          "tax_code_description": "Food for home consumption",
+          "confidence": 0.42
+        }
+      ]
+    }
+  ]
+}

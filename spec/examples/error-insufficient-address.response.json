@@ -1,0 +1,20 @@
+{
+  "error": {
+    "code": "UTCS-3001",
+    "category": "input",
+    "message": "Required destination address is missing. Provide addresses.ship_to (with ship_from) or addresses.single_location.",
+    "recovery": {
+      "action": "provide_additional_data",
+      "required_fields": [
+        "addresses.ship_to.line1",
+        "addresses.ship_to.city",
+        "addresses.ship_to.postal_code",
+        "addresses.ship_to.country"
+      ],
+      "optional_fields": [
+        "addresses.ship_to.region"
+      ],
+      "suggestion": "Supply a destination address with at least line1, city, postal_code, and country (ISO 3166-1 alpha-2), or supply latitude and longitude. A postal code alone is not sufficient for jurisdiction resolution."
+    }
+  }
+}

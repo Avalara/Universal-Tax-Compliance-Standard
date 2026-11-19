@@ -1,0 +1,29 @@
+{
+  "description": "Normative UTCS error-code registry. Codes are stable within an envelope major version. Category values match error-response.schema.json.",
+  "codes": [
+    { "code": "UTCS-1001", "category": "service", "summary": "Provider temporarily unavailable" },
+    { "code": "UTCS-1002", "category": "service", "summary": "Capability not implemented" },
+    { "code": "UTCS-1003", "category": "service", "summary": "Rate limit exceeded" },
+    { "code": "UTCS-2001", "category": "authentication", "summary": "Invalid or expired credentials" },
+    { "code": "UTCS-2002", "category": "authentication", "summary": "Insufficient scope for the requested capability" },
+    { "code": "UTCS-3001", "category": "input", "summary": "Required field missing" },
+    { "code": "UTCS-3002", "category": "input", "summary": "Invalid field value or unrecognized enumeration" },
+    { "code": "UTCS-3003", "category": "input", "summary": "Unrecognized input profile" },
+    { "code": "UTCS-3004", "category": "input", "summary": "Line item validation failure" },
+    { "code": "UTCS-4001", "category": "tax_resolution", "summary": "Jurisdiction unresolvable from the provided address" },
+    { "code": "UTCS-4002", "category": "tax_resolution", "summary": "Tax code not recognized" },
+    { "code": "UTCS-4003", "category": "tax_resolution", "summary": "Country not supported" },
+    { "code": "UTCS-4004", "category": "tax_resolution", "summary": "Transaction date outside the supported range" },
+    { "code": "UTCS-5001", "category": "exemption", "summary": "Exemption certificate not found" },
+    { "code": "UTCS-5002", "category": "exemption", "summary": "Exemption certificate expired" },
+    { "code": "UTCS-5003", "category": "exemption", "summary": "Exemption not valid for the jurisdiction" },
+    { "code": "UTCS-5004", "category": "exemption", "summary": "Exemption not valid for the product" },
+    { "code": "UTCS-6001", "category": "document", "summary": "Document code already committed" },
+    { "code": "UTCS-6002", "category": "document", "summary": "Document not found for void or adjustment" },
+    { "code": "UTCS-7001", "category": "cross_border", "summary": "HS code classification failed" },
+    { "code": "UTCS-7002", "category": "cross_border", "summary": "Country of origin required but not provided" },
+    { "code": "UTCS-7003", "category": "cross_border", "summary": "Trade agreement validation failed" },
+    { "code": "UTCS-8001", "category": "elr", "summary": "Reporting submission failed" },
+    { "code": "UTCS-8002", "category": "elr", "summary": "Reporting format not supported for the jurisdiction" }
+  ]
+}

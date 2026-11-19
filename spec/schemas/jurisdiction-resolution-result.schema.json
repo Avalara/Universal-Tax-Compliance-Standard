@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Jurisdiction Resolution Result",
+  "description": "Response body for POST /jurisdictions/resolve. The resolved address and the taxing-jurisdiction hierarchy that applies to it.",
+  "type": "object",
+  "properties": {
+    "address_resolved": {
+      "$ref": "common/address.schema.json"
+    },
+    "jurisdictions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "jurisdiction_type": {
+            "type": "string",
+            "enum": ["country", "state", "province", "county", "city", "district", "special"]
+          },
+          "jurisdiction_code": { "type": "string" },
+          "jurisdiction_name": { "type": "string" },
+          "tax_types": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["sales_tax", "use_tax", "vat", "gst", "excise", "duty", "environmental_fee"]
+            }
+          },
+          "parent_jurisdiction_code": {
+            "type": "string",
+            "description": "Code of the parent jurisdiction in the hierarchy."
+          }
+        },
+        "required": ["jurisdiction_type", "jurisdiction_code", "jurisdiction_name", "tax_types"]
+      }
+    }
+  },
+  "required": ["address_resolved", "jurisdictions"]
+}

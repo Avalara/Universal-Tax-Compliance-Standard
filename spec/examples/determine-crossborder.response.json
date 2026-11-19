@@ -1,0 +1,64 @@
+{
+  "result_id": "res_c40a8b17e9",
+  "document_code": "SO-100521",
+  "status": "calculated",
+  "total_tax": "38.00",
+  "total_taxable": "200.00",
+  "total_exempt": "0.00",
+  "total_non_taxable": "0.00",
+  "total_amount": "200.00",
+  "currency_code": "EUR",
+  "lines": [
+    {
+      "line_number": "1",
+      "tax_amount": "38.00",
+      "taxable_amount": "200.00",
+      "exempt_amount": "0.00",
+      "non_taxable_amount": "0.00",
+      "tax_code": "P0000000",
+      "tax_code_description": "Tangible personal property",
+      "jurisdictions": [
+        {
+          "jurisdiction_type": "country",
+          "jurisdiction_code": "DE",
+          "jurisdiction_code_system": "iso-3166-1",
+          "jurisdiction_name": "GERMANY",
+          "tax_type": "vat",
+          "tax_category": "S",
+          "rate": "0.19",
+          "taxable_amount": "200.00",
+          "tax_amount": "38.00",
+          "rate_rule_id": "DE-VAT-STD-19",
+          "exemption_applied": null
+        }
+      ]
+    }
+  ],
+  "jurisdictions": [
+    {
+      "jurisdiction_type": "country",
+      "jurisdiction_code": "DE",
+      "jurisdiction_code_system": "iso-3166-1",
+      "jurisdiction_name": "GERMANY",
+      "tax_type": "vat",
+      "taxable_amount": "200.00",
+      "tax_amount": "38.00"
+    }
+  ],
+  "messages": [
+    {
+      "severity": "info",
+      "code": "IMPORT-DDP",
+      "summary": "Delivered Duty Paid (DDP): the seller is assessed as importer of record and German import VAT is collected at the point of sale.",
+      "refers_to": "delivery_terms",
+      "source": "cross_border"
+    }
+  ],
+  "attestation": {
+    "provider_id": "example-tax",
+    "provider_name": "Example Tax Provider",
+    "content_version": "2026.05.1",
+    "calculation_timestamp": "2026-05-10T14:30:02Z",
+    "engine_version": "utcs-engine/4.2.0"
+  }
+}

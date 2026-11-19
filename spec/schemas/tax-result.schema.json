@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/tax-result.schema.json",
+  "title": "UTCS Tax Result",
+  "description": "The canonical output of all UTCS tax determination operations. This schema is strictly defined and invariant across all providers. Every compliant provider returns data in this identical structure.",
+  "type": "object",
+  "properties": {
+    "result_id": {
+      "type": "string",
+      "description": "Unique identifier for this result. Provider-generated."
+    },
+    "document_code": {
+      "type": "string",
+      "description": "Echo of the input document_code."
+    },
+    "status": {
+      "type": "string",
+      "description": "Status of this tax result.",
+      "enum": ["calculated", "committed", "voided", "adjusted"]
+    },
+    "total_tax": {
+      "type": "string",
+      "description": "Total tax across all lines and jurisdictions. Reflects any applied tax_override.",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "total_tax_calculated": {
+      "type": "string",
+      "description": "Total tax the engine computed from rates and rules, before any tax_override. Present only when an override changed the result; equals total_tax otherwise.",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "total_taxable": {
+      "type": "string",
+      "description": "Total taxable amount.",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "total_exempt": {
+      "type": "string",
+      "description": "Total exempt amount (exempted by certificate or entity status).",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "total_non_taxable": {
+      "type": "string",
+      "description": "Total non-taxable amount across all lines. Non-taxable means not subject to tax by product or jurisdiction taxability rule, distinct from exempt.",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "total_discount": {
+      "type": "string",
+      "description": "Total discount allocated across all lines. Echoes the transaction-level discount the provider applied when reducing the taxable basis.",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "total_amount": {
+      "type": "string",
+      "description": "Total transaction amount (pre-tax).",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "currency_code": {
+      "type": "string",
+      "description": "ISO 4217 currency code for all amounts.",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "lines": {
+      "type": "array",
+      "description": "Per-line tax results. Each entry corresponds to an input line.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "line_number": {
+            "type": "string",
+            "description": "Matches the input line_number."
+          },
+          "tax_amount": {
+            "type": "string",
+            "description": "Total tax for this line across all jurisdictions. Reflects any applied tax_override.",
+            "pattern": "^-?\\d+(\\.\\d+)?$"
+          },
+          "tax_calculated": {
+            "type": "string",
+            "description": "Tax the engine computed for this line from rates and rules, before any tax_override. Present only when an override changed the line; equals tax_amount otherwise.",
+            "pattern": "^-?\\d+(\\.\\d+)?$"
+          },
+          "taxable_amount": {
+            "type": "string",
+            "description": "Amount subject to tax.",
+            "pattern": "^-?\\d+(\\.\\d+)?$"
+          },
+          "exempt_amount": {
+            "type": "string",
+            "description": "Amount exempt from tax by certificate or entity status.",
+            "pattern": "^-?\\d+(\\.\\d+)?$"
+          },
+          "non_taxable_amount": {
+            "type": "string",
+            "description": "Amount not subject to tax by product or jurisdiction taxability rule (distinct from exempt_amount). taxable_amount + exempt_amount + non_taxable_amount reconciles to the line's taxable basis (line amount net of any allocated discount).",
+            "pattern": "^-?\\d+(\\.\\d+)?$"
+          },
+          "discount_amount": {
+            "type": "string",
+            "description": "Discount allocated to this line from the transaction-level discount (present only when a discount was applied and this line was flagged discounted). Reduces the taxable basis.",
+            "pattern": "^-?\\d+(\\.\\d+)?$"
+          },
+          "tax_code": {
+            "type": "string",
+            "description": "Tax code applied. May differ from input if the provider reclassified."
+          },
+          "tax_code_description": {
+            "type": "string",
+            "description": "Human-readable description of the applied tax code."
+          },
+          "jurisdictions": {
+            "type": "array",
+            "description": "Per-jurisdiction breakdown of taxes applied to this line.",
+            "items": {
+              "$ref": "common/jurisdiction-breakdown.schema.json"
+            }
+          }
+        },
+        "required": [
+          "line_number",
+          "tax_amount",
+          "taxable_amount",
+          "exempt_amount",
+          "non_taxable_amount",
+          "tax_code",
+          "jurisdictions"
+        ]
+      },
+      "minItems": 1
+    },
+    "jurisdictions": {
+      "type": "array",
+      "description": "Optional order-level rollup of tax by jurisdiction across the whole transaction. Each entry sums one taxing jurisdiction's tax over all lines. This is a convenience AGGREGATION; the authoritative per-line, per-jurisdiction detail stays in lines[].jurisdictions[]. A jurisdiction that appears on several lines is collapsed into a single entry here.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "jurisdiction_type": {
+            "type": "string",
+            "description": "Type of taxing jurisdiction.",
+            "enum": ["country", "state", "province", "county", "city", "district", "special"]
+          },
+          "jurisdiction_code": {
+            "type": "string",
+            "description": "Standardized jurisdiction identifier. Interpreted according to jurisdiction_code_system."
+          },
+          "jurisdiction_code_system": {
+            "type": "string",
+            "description": "Code system that jurisdiction_code is drawn from. Matches the value used in the per-line breakdown.",
+            "enum": ["fips", "iso-3166-1", "iso-3166-2", "provider-defined"],
+            "default": "provider-defined"
+          },
+          "jurisdiction_name": {
+            "type": "string",
+            "description": "Human-readable jurisdiction name."
+          },
+          "tax_type": {
+            "type": "string",
+            "description": "Type of tax levied by this jurisdiction. Provider-derived OUTPUT.",
+            "enum": ["sales_tax", "sellers_use", "consumer_use", "use_tax", "vat", "gst", "excise", "duty", "environmental_fee"]
+          },
+          "taxable_amount": {
+            "type": "string",
+            "description": "Amount subject to this jurisdiction's tax, summed across all lines.",
+            "pattern": "^-?\\d+(\\.\\d+)?$"
+          },
+          "tax_amount": {
+            "type": "string",
+            "description": "Tax for this jurisdiction, summed across all lines.",
+            "pattern": "^-?\\d+(\\.\\d+)?$"
+          }
+        },
+        "required": [
+          "jurisdiction_type",
+          "jurisdiction_code",
+          "jurisdiction_name",
+          "tax_type",
+          "taxable_amount",
+          "tax_amount"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "attestation": {
+      "$ref": "common/attestation.schema.json",
+      "description": "Provider attestation identifying who calculated the tax, using what content, and when."
+    },
+    "conformance": {
+      "type": "array",
+      "description": "Conformance profiles the provider applied when producing this result (OUTPUT annotation). Each profile is declared in the provider manifest under conformance_profiles. Not supplied by the caller. Example: a US sale returns [{\"id\":\"us-sst\"}]; a cross-border EU invoice returns [{\"id\":\"en16931\"}].",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Conformance profile identifier applied to this result.",
+            "examples": ["us-sst", "en16931"]
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the profile applied."
+          }
+        },
+        "required": ["id"]
+      }
+    },
+    "messages": {
+      "type": "array",
+      "description": "Informational, warning, and error notices the provider raised while calculating (e.g., an address was corrected, a tax code was defaulted, nexus was not established). Advisory OUTPUT; the caller SHOULD surface warnings.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "severity": {
+            "type": "string",
+            "description": "Severity of the message.",
+            "enum": ["info", "warning", "error"]
+          },
+          "code": {
+            "type": "string",
+            "description": "Provider-specific message code for programmatic handling."
+          },
+          "summary": {
+            "type": "string",
+            "description": "Human-readable message text."
+          },
+          "refers_to": {
+            "type": "string",
+            "description": "Optional pointer to the part of the request the message concerns (e.g., \"lines[0]\", \"addresses.ship_to\")."
+          },
+          "source": {
+            "type": "string",
+            "description": "Optional subsystem that raised the message (e.g., \"address_validation\", \"nexus\", \"classification\")."
+          }
+        },
+        "required": ["severity", "summary"],
+        "additionalProperties": false
+      }
+    },
+    "adjustment": {
+      "type": "object",
+      "description": "Present when status is 'adjusted'. Explains why the committed transaction was adjusted and links to the prior result.",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "Reason code or category for the adjustment."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable explanation of the adjustment."
+        },
+        "adjusted_from_result_id": {
+          "type": "string",
+          "description": "result_id of the result this one supersedes."
+        }
+      },
+      "required": ["reason"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "result_id",
+    "document_code",
+    "status",
+    "total_tax",
+    "total_taxable",
+    "total_exempt",
+    "total_non_taxable",
+    "total_amount",
+    "currency_code",
+    "lines",
+    "attestation"
+  ],
+  "additionalProperties": false
+}

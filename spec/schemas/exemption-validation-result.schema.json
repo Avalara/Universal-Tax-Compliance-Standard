@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/exemption-validation-result.schema.json",
+  "title": "Exemption Validation Result",
+  "description": "Response body for POST /exemptions/validate.",
+  "type": "object",
+  "properties": {
+    "certificate_id": { "type": "string" },
+    "valid": { "type": "boolean" },
+    "status": {
+      "type": "string",
+      "enum": ["valid", "expired", "not_found", "invalid_jurisdiction", "invalid_product"]
+    },
+    "exemption_type": {
+      "type": "string",
+      "description": "Type of exemption, such as resale or government."
+    },
+    "expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "jurisdictions_covered": {
+      "type": "array",
+      "description": "Jurisdictions where this certificate is valid.",
+      "items": { "type": "string" }
+    },
+    "message": { "type": "string" }
+  },
+  "required": ["certificate_id", "valid", "status"]
+}

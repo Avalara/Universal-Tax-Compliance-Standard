@@ -1,0 +1,14 @@
+{
+  "description": "Normative REST operations for the UTCS 1.0 envelope. Each path is relative to the provider REST base URL, which includes the /utcs/v1 prefix. There is no /tax/void operation: a void is document_type \"void\" on POST /tax/determine.",
+  "operations": [
+    { "capability": null, "tier": null, "method": "GET", "path": "/.well-known/tax-compliance", "operationId": "getDiscoveryManifest" },
+    { "capability": "tax-determination", "tier": "core", "method": "POST", "path": "/tax/determine", "operationId": "determineTax" },
+    { "capability": "jurisdiction-resolution", "tier": "core", "method": "POST", "path": "/jurisdictions/resolve", "operationId": "resolveJurisdictions" },
+    { "capability": "product-classification", "tier": "standard", "method": "POST", "path": "/tax-codes/classify", "operationId": "classifyProduct" },
+    { "capability": "exemption-validation", "tier": "standard", "method": "POST", "path": "/exemptions/validate", "operationId": "validateExemption" },
+    { "capability": "compliance-documents", "tier": "standard", "method": "GET", "path": "/documents/{document_id}", "operationId": "getComplianceDocument" },
+    { "capability": "compliance-documents", "tier": "standard", "method": "POST", "path": "/documents", "operationId": "generateComplianceDocument" },
+    { "capability": "cross-border", "tier": "advanced", "method": "POST", "path": "/cross-border/calculate", "operationId": "calculateDuties" },
+    { "capability": "filing-obligations", "tier": "advanced", "method": "GET", "path": "/obligations", "operationId": "getFilingObligations" }
+  ]
+}

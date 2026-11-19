@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/webhooks/document-generated.schema.json",
+  "title": "Webhook: document generated",
+  "description": "Payload for the utcs.document.generated event. Sent when a compliance document is created. The signature is the provider's HMAC over the raw body.",
+  "type": "object",
+  "properties": {
+    "event_type": { "type": "string", "const": "utcs.document.generated" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "document_id": { "type": "string" },
+        "document_code": { "type": "string" },
+        "result_id": { "type": "string" }
+      },
+      "required": ["document_id", "document_code", "result_id"],
+      "additionalProperties": false
+    },
+    "signature": { "type": "string" }
+  },
+  "required": ["event_type", "timestamp", "payload", "signature"],
+  "additionalProperties": false
+}

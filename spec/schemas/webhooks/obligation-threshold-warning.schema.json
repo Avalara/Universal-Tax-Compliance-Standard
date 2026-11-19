@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/webhooks/obligation-threshold-warning.schema.json",
+  "title": "Webhook: obligation threshold warning",
+  "description": "Payload for the utcs.obligation.threshold_warning event. Sent when accumulated activity approaches a nexus threshold. The signature is the provider's HMAC over the raw body.",
+  "type": "object",
+  "properties": {
+    "event_type": { "type": "string", "const": "utcs.obligation.threshold_warning" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "jurisdiction_code": { "type": "string" },
+        "jurisdiction_name": { "type": "string" },
+        "threshold_type": { "type": "string" },
+        "threshold_amount": { "type": "string" },
+        "current_amount": { "type": "string" },
+        "percentage_reached": { "type": "number" }
+      },
+      "required": ["jurisdiction_code", "threshold_type", "threshold_amount", "current_amount", "percentage_reached"],
+      "additionalProperties": false
+    },
+    "signature": { "type": "string" }
+  },
+  "required": ["event_type", "timestamp", "payload", "signature"],
+  "additionalProperties": false
+}

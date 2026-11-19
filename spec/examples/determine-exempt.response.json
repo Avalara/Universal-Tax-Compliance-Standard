@@ -1,0 +1,66 @@
+{
+  "result_id": "res_a17e44b0c8",
+  "document_code": "SO-77810",
+  "status": "calculated",
+  "total_tax": "0.00",
+  "total_taxable": "0.00",
+  "total_exempt": "500.00",
+  "total_non_taxable": "0.00",
+  "total_amount": "500.00",
+  "currency_code": "USD",
+  "lines": [
+    {
+      "line_number": "1",
+      "tax_amount": "0.00",
+      "taxable_amount": "0.00",
+      "exempt_amount": "500.00",
+      "non_taxable_amount": "0.00",
+      "tax_code": "P0000000",
+      "tax_code_description": "Tangible personal property",
+      "jurisdictions": [
+        {
+          "jurisdiction_type": "state",
+          "jurisdiction_code": "39",
+          "jurisdiction_code_system": "fips",
+          "jurisdiction_name": "OHIO",
+          "tax_type": "sales_tax",
+          "tax_category": "E",
+          "rate": "0",
+          "taxable_amount": "0.00",
+          "tax_amount": "0.00",
+          "rate_rule_id": "OH-STATE-0575",
+          "exemption_applied": {
+            "certificate_id": "EXM-OH-7781",
+            "exemption_reason": "resale"
+          }
+        },
+        {
+          "jurisdiction_type": "county",
+          "jurisdiction_code": "39049",
+          "jurisdiction_code_system": "fips",
+          "jurisdiction_name": "FRANKLIN COUNTY",
+          "tax_type": "sales_tax",
+          "tax_category": "E",
+          "rate": "0",
+          "taxable_amount": "0.00",
+          "tax_amount": "0.00",
+          "rate_rule_id": "OH-FRANKLIN-0125",
+          "exemption_applied": {
+            "certificate_id": "EXM-OH-7781",
+            "exemption_reason": "resale"
+          }
+        }
+      ]
+    }
+  ],
+  "attestation": {
+    "provider_id": "example-tax",
+    "provider_name": "Example Tax Provider",
+    "content_version": "2026.03.1",
+    "calculation_timestamp": "2026-03-16T13:40:00Z",
+    "engine_version": "utcs-engine/4.2.0"
+  },
+  "conformance": [
+    { "id": "us-sst", "version": "2025.1" }
+  ]
+}

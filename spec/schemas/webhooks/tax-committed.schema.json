@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/webhooks/tax-committed.schema.json",
+  "title": "Webhook: tax committed",
+  "description": "Payload for the utcs.tax.committed event. Sent when a tax determination is committed. The signature is the provider's HMAC over the raw body.",
+  "type": "object",
+  "properties": {
+    "event_type": { "type": "string", "const": "utcs.tax.committed" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "payload": { "$ref": "../tax-result.schema.json" },
+    "signature": {
+      "type": "string",
+      "description": "HMAC signature for webhook verification."
+    }
+  },
+  "required": ["event_type", "timestamp", "payload", "signature"],
+  "additionalProperties": false
+}

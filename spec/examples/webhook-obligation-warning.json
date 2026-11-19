@@ -1,0 +1,13 @@
+{
+  "event_type": "utcs.obligation.threshold_warning",
+  "timestamp": "2026-04-18T09:12:00Z",
+  "payload": {
+    "jurisdiction_code": "US-CO",
+    "jurisdiction_name": "COLORADO",
+    "threshold_type": "revenue",
+    "threshold_amount": "100000.00",
+    "current_amount": "80000.00",
+    "percentage_reached": 80
+  },
+  "signature": "example-signature"
+}

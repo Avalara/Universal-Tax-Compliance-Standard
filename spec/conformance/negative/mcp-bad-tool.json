@@ -1,0 +1,17 @@
+{
+  "tools": [
+    {
+      "name": "utcs_broken",
+      "description": "Intentionally invalid tool used by the negative conformance suite.",
+      "capability": "tax-determination@1.0",
+      "tier": "core",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": { "$ref": "#/$defs/Missing" }
+        },
+        "required": ["address"]
+      }
+    }
+  ]
+}

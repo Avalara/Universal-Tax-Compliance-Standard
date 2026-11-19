@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/webhooks/obligation-threshold-crossed.schema.json",
+  "title": "Webhook: obligation threshold crossed",
+  "description": "Payload for the utcs.obligation.threshold_crossed event. Sent when accumulated activity exceeds a nexus threshold. The signature is the provider's HMAC over the raw body.",
+  "type": "object",
+  "properties": {
+    "event_type": { "type": "string", "const": "utcs.obligation.threshold_crossed" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "jurisdiction_code": { "type": "string" },
+        "jurisdiction_name": { "type": "string" },
+        "nexus_type": { "type": "string" },
+        "filing_frequency": { "type": "string" },
+        "effective_date": { "type": "string", "format": "date" }
+      },
+      "required": ["jurisdiction_code", "nexus_type", "filing_frequency", "effective_date"],
+      "additionalProperties": false
+    },
+    "signature": { "type": "string" }
+  },
+  "required": ["event_type", "timestamp", "payload", "signature"],
+  "additionalProperties": false
+}

@@ -1,0 +1,395 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/mcp/utcs-mcp-tools.json",
+  "title": "UTCS MCP Tool Definitions",
+  "description": "MCP (Model Context Protocol) binding for UTCS. Each UTCS capability maps to one or more MCP tools. Tool names use the prefix declared in the provider's manifest (default: utcs_). Tool input schemas match UTCS request structures; tool output schemas match UTCS response structures.",
+  "tools": [
+    {
+      "name": "utcs_determine_tax",
+      "description": "Calculate tax for a commerce transaction. Given items, addresses, entity type, and transaction type, returns applicable taxes with full jurisdiction breakdown and provider attestation. When commit=true, the provider records the transaction as final; when commit=false, the result is an estimate. Supports B2C, B2B, and B2G transactions across all jurisdictions. This is the foundational UTCS capability — every other capability supports or extends tax determination. Returns structured UTCS error codes with recovery hints if tax cannot be accurately determined; never returns approximate values.",
+      "capability": "tax-determination@1.0",
+      "tier": "core",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document_type": {
+            "type": "string",
+            "description": "Transaction type",
+            "enum": ["sale", "return", "purchase_order", "inventory_transfer", "reverse_charge", "customs", "void"]
+          },
+          "document_code": {
+            "type": "string",
+            "description": "Unique transaction identifier in the caller's system. Used for idempotency and reconciliation."
+          },
+          "company_code": {
+            "type": "string",
+            "description": "Identifier of the selling entity the transaction belongs to. Routes to the correct registered entity (nexus, registration, reporting). Distinct from business_identification_no."
+          },
+          "transaction_date": {
+            "type": "string",
+            "description": "ISO 8601 datetime of the transaction. Determines applicable tax rates and rules."
+          },
+          "currency_code": {
+            "type": "string",
+            "description": "ISO 4217 currency code (e.g., USD, EUR, GBP)"
+          },
+          "commit": {
+            "type": "boolean",
+            "description": "true = commit (the provider records the transaction as final); false = estimate only"
+          },
+          "entity_type": {
+            "type": "string",
+            "description": "Transaction relationship type",
+            "enum": ["b2c", "b2b", "b2g"]
+          },
+          "customer": {
+            "type": "object",
+            "description": "Customer details including identifiers, tax registrations, and exemption credentials",
+            "properties": {
+              "customer_code": { "type": "string" },
+              "tax_registration_ids": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": { "type": "string" },
+                    "value": { "type": "string" },
+                    "jurisdiction": { "type": "string" }
+                  },
+                  "required": ["type", "value"]
+                }
+              },
+              "exemption_certificate_id": { "type": "string" },
+              "entity_use_code": {
+                "type": "string",
+                "description": "Entity/use-based exemption reason (buyer exempt by status or use), independent of a certificate.",
+                "enum": ["resale", "government", "charitable_nonprofit", "religious_educational", "agricultural_production", "industrial_production", "direct_pay", "direct_mail", "foreign_diplomat", "export", "intra_community_supply", "other"]
+              }
+            }
+          },
+          "addresses": {
+            "type": "object",
+            "description": "Transaction addresses. Provide ship_from + ship_to, or single_location for point-of-sale. Every address must include either a full street address (line1, city, postal_code, country) or geocoordinates (latitude, longitude, country). A postal code alone is never sufficient.",
+            "properties": {
+              "ship_from": { "$ref": "#/$defs/Address" },
+              "ship_to": { "$ref": "#/$defs/Address" },
+              "single_location": { "$ref": "#/$defs/Address" },
+              "point_of_order_acceptance": { "$ref": "#/$defs/Address" },
+              "point_of_order_origin": { "$ref": "#/$defs/Address" },
+              "goods_place_or_service_rendered": { "$ref": "#/$defs/Address" },
+              "import": { "$ref": "#/$defs/Address" },
+              "bill_to": { "$ref": "#/$defs/Address" }
+            }
+          },
+          "lines": {
+            "type": "array",
+            "description": "Line items. At least one required. All monetary amounts are decimal strings.",
+            "items": { "$ref": "#/$defs/LineItem" },
+            "minItems": 1
+          },
+          "discount": {
+            "type": "string",
+            "description": "Transaction-level discount amount (decimal string), allocated across lines flagged discounted"
+          },
+          "marketplace": {
+            "type": "object",
+            "description": "Marketplace facilitator context. Present when a facilitator may be liable to collect and remit tax.",
+            "properties": {
+              "facilitated": { "type": "boolean" },
+              "liable_party": { "type": "string", "enum": ["marketplace_facilitator", "seller"] },
+              "facilitator_id": { "type": "string" }
+            },
+            "required": ["facilitated", "liable_party"]
+          },
+          "business_identification_no": {
+            "type": "string",
+            "description": "The selling entity's VAT/GST tax registration number. Required for B2B in VAT/GST jurisdictions. For routing to the selling entity, use company_code."
+          },
+          "reference_code": {
+            "type": "string",
+            "description": "Optional reference to a related document or external system. For a return or adjustment, set this to the original transaction's document_code."
+          },
+          "purchase_order_number": {
+            "type": "string",
+            "description": "Buyer's purchase order number. Optional; does not affect tax determination."
+          },
+          "delivery_terms": {
+            "type": "string",
+            "description": "Incoterms (ICC Incoterms 2020). For cross-border, DDP places import VAT/GST and duty on the seller; other terms place them on the buyer as importer of record.",
+            "enum": ["EXW", "FCA", "CPT", "CIP", "DAP", "DPU", "DDP", "FAS", "FOB", "CFR", "CIF"]
+          },
+          "is_seller_importer_of_record": {
+            "type": "boolean",
+            "description": "For cross-border, true when the seller is the importer of record and liable for import taxes and duties. When omitted, inferred from delivery_terms."
+          },
+          "tax_override": {
+            "type": "object",
+            "description": "Override for returns, imported amounts, or accrual scenarios",
+            "properties": {
+              "type": { "type": "string", "enum": ["tax_date", "tax_amount", "exemption"] },
+              "value": { "type": "string" },
+              "reason": { "type": "string" }
+            },
+            "required": ["type", "value", "reason"]
+          },
+          "parameters": {
+            "type": "object",
+            "description": "Provider-specific or protocol-specific metadata"
+          }
+        },
+        "required": ["document_type", "transaction_date", "currency_code", "commit", "entity_type", "addresses", "lines"],
+        "$defs": {
+          "Address": {
+            "type": "object",
+            "properties": {
+              "line1": { "type": "string" },
+              "line2": { "type": "string" },
+              "line3": { "type": "string" },
+              "city": { "type": "string" },
+              "region": { "type": "string" },
+              "postal_code": { "type": "string" },
+              "country": { "type": "string", "description": "ISO 3166-1 alpha-2" },
+              "latitude": { "type": "number" },
+              "longitude": { "type": "number" },
+              "location_code": { "type": "string", "description": "Identifier of a registered business location at this address, for outlet-level local reporting." }
+            },
+            "required": ["country"]
+          },
+          "LineItem": {
+            "type": "object",
+            "properties": {
+              "line_number": { "type": "string" },
+              "quantity": { "type": "number" },
+              "amount": { "type": "string", "description": "Decimal string (e.g., \"49.99\")" },
+              "item_code": { "type": "string" },
+              "description": { "type": "string" },
+              "tax_code": { "type": "string" },
+              "tax_included": { "type": "boolean", "default": false },
+              "discounted": { "type": "boolean", "default": false, "description": "If true, the transaction-level discount is allocated to this line." },
+              "hs_code": { "type": "string" },
+              "revenue_account": { "type": "string" },
+              "entity_use_code": {
+                "type": "string",
+                "description": "Per-line entity/use-based exemption reason, overriding the customer-level value.",
+                "enum": ["resale", "government", "charitable_nonprofit", "religious_educational", "agricultural_production", "industrial_production", "direct_pay", "direct_mail", "foreign_diplomat", "export", "intra_community_supply", "other"]
+              },
+              "exemption_certificate_id": {
+                "type": "string",
+                "description": "Per-line exemption certificate identifier, overriding the customer-level value for this line."
+              },
+              "addresses": {
+                "type": "object",
+                "description": "Per-line address override for split-origin or drop-ship fulfillment.",
+                "properties": {
+                  "ship_from": { "$ref": "#/$defs/Address" },
+                  "ship_to": { "$ref": "#/$defs/Address" }
+                }
+              },
+              "tax_override": {
+                "type": "object",
+                "description": "Per-line override of the tax calculation for this line only.",
+                "properties": {
+                  "type": { "type": "string", "enum": ["tax_date", "tax_amount", "exemption"] },
+                  "value": { "type": "string" },
+                  "reason": { "type": "string" }
+                },
+                "required": ["type", "value", "reason"]
+              },
+              "parameters": { "type": "object" }
+            },
+            "required": ["line_number", "quantity", "amount"]
+          }
+        }
+      }
+    },
+    {
+      "name": "utcs_resolve_jurisdictions",
+      "description": "Resolve the applicable taxing jurisdictions for a given address or coordinate pair. Returns the full jurisdiction hierarchy (country, state/province, county, city, special taxing districts) with jurisdiction codes, names, and applicable tax types. Can operate independently for address validation and jurisdiction lookup scenarios.",
+      "capability": "jurisdiction-resolution@1.0",
+      "tier": "core",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "line1": { "type": "string", "description": "Street address" },
+          "line2": { "type": "string" },
+          "line3": { "type": "string" },
+          "city": { "type": "string" },
+          "region": { "type": "string", "description": "State/province (ISO 3166-2)" },
+          "postal_code": { "type": "string" },
+          "country": { "type": "string", "description": "ISO 3166-1 alpha-2 country code" },
+          "latitude": { "type": "number", "description": "Latitude (-90 to 90)" },
+          "longitude": { "type": "number", "description": "Longitude (-180 to 180)" }
+        },
+        "required": ["country"]
+      }
+    },
+    {
+      "name": "utcs_classify_product",
+      "description": "Map product identifiers (SKU, UPC, item codes) or natural-language descriptions to standardized tax codes. Critical for agentic commerce where AI agents describe products conversationally. Supports both code-based lookups and natural-language classification with confidence scores.",
+      "capability": "product-classification@1.0",
+      "tier": "standard",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "array",
+            "description": "Products to classify. Provide description, item_code, or both.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "description": { "type": "string", "description": "Natural-language product description" },
+                "item_code": { "type": "string", "description": "Merchant product identifier" },
+                "upc": { "type": "string", "description": "Universal Product Code" },
+                "category": { "type": "string", "description": "Product category hint" }
+              }
+            },
+            "minItems": 1
+          },
+          "jurisdiction": {
+            "type": "string",
+            "description": "Target jurisdiction (tax codes may vary by jurisdiction)"
+          }
+        },
+        "required": ["products"]
+      }
+    },
+    {
+      "name": "utcs_validate_exemption",
+      "description": "Validate exemption certificates, resale certificates, and other tax-exempt credentials in real-time. Supports programmatic exchange of exemption credentials for B2B and agent-to-agent transactions without human intervention. Returns validity status, exemption type, expiration, and covered jurisdictions.",
+      "capability": "exemption-validation@1.0",
+      "tier": "standard",
+      "dependencies": ["tax-determination"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "certificate_id": {
+            "type": "string",
+            "description": "Exemption certificate identifier on file with the provider"
+          },
+          "customer_code": {
+            "type": "string",
+            "description": "Customer identifier"
+          },
+          "jurisdiction": {
+            "type": "string",
+            "description": "Jurisdiction to validate the exemption against"
+          },
+          "product_tax_code": {
+            "type": "string",
+            "description": "Tax code to check exemption applicability for"
+          },
+          "transaction_date": {
+            "type": "string",
+            "description": "ISO 8601 date to check validity against"
+          }
+        },
+        "required": ["certificate_id", "jurisdiction"]
+      }
+    },
+    {
+      "name": "utcs_get_document",
+      "description": "Retrieve an audit-defensible compliance document for a committed transaction. Returns the full compliance record including the original tax result, audit trail, and document status.",
+      "capability": "compliance-documents@1.0",
+      "tier": "standard",
+      "dependencies": ["tax-determination"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "description": "Compliance document identifier returned by the compliance-documents capability"
+          }
+        },
+        "required": ["document_id"]
+      }
+    },
+    {
+      "name": "utcs_calculate_duties",
+      "description": "Calculate cross-border duties and tariffs for international transactions. Handles customs duty calculation, landed cost estimation, VAT/GST determination, de minimis threshold awareness, country-of-origin rules, HS classification, Incoterms (DAP, DDP, FOB, FCA, EXW, etc.), and importer of record designation.",
+      "capability": "cross-border@1.0",
+      "tier": "advanced",
+      "dependencies": ["tax-determination", "product-classification"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document_type": { "type": "string", "enum": ["sale", "customs"] },
+          "transaction_date": { "type": "string" },
+          "currency_code": { "type": "string" },
+          "commit": { "type": "boolean" },
+          "entity_type": { "type": "string", "enum": ["b2c", "b2b", "b2g"] },
+          "addresses": {
+            "type": "object",
+            "properties": {
+              "ship_from": { "type": "object" },
+              "ship_to": { "type": "object" }
+            },
+            "required": ["ship_from", "ship_to"]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "line_number": { "type": "string" },
+                "quantity": { "type": "number" },
+                "amount": { "type": "string" },
+                "description": { "type": "string" },
+                "hs_code": { "type": "string", "description": "Harmonized System tariff code (REQUIRED for cross-border)" }
+              },
+              "required": ["line_number", "quantity", "amount", "hs_code"]
+            },
+            "minItems": 1
+          },
+          "country_of_origin": {
+            "type": "string",
+            "description": "ISO 3166-1 alpha-2 country of origin (REQUIRED)"
+          },
+          "incoterms": {
+            "type": "string",
+            "description": "ICC Incoterms 2020 delivery terms",
+            "enum": ["DAP", "DDP", "FOB", "FCA", "EXW", "CIF", "CFR", "CPT", "CIP", "FAS", "DPU"]
+          },
+          "importer_of_record": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "tax_id": { "type": "string" },
+              "address": { "type": "object" }
+            },
+            "required": ["name", "tax_id"]
+          },
+          "trade_agreements": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Applicable trade agreements (e.g., USMCA, EU-UK TCA)"
+          }
+        },
+        "required": ["document_type", "transaction_date", "currency_code", "commit", "entity_type", "addresses", "lines", "country_of_origin", "incoterms"]
+      }
+    },
+    {
+      "name": "utcs_check_obligations",
+      "description": "Check filing obligations across jurisdictions. Returns nexus accumulation status, economic nexus threshold monitoring, and filing requirement awareness. Helps merchants understand where they are accumulating obligations and what filing requirements are being created as agents transact across jurisdictions.",
+      "capability": "filing-obligations@1.0",
+      "tier": "advanced",
+      "dependencies": ["tax-determination", "jurisdiction-resolution"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "description": "Start of the reporting period (ISO 8601 date)"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "End of the reporting period (ISO 8601 date)"
+          },
+          "jurisdiction": {
+            "type": "string",
+            "description": "Filter by specific jurisdiction code"
+          }
+        }
+      }
+    }
+  ]
+}

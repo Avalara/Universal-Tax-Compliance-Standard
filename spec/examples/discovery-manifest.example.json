@@ -1,0 +1,102 @@
+{
+  "utcs_version": "1.0",
+  "provider": {
+    "id": "example-tax",
+    "name": "Example Tax Provider",
+    "description": "Illustrative provider used by the specification examples. Not a live service.",
+    "website": "https://example.com",
+    "support_contact": "tax-support@example.com"
+  },
+  "capabilities": [
+    {
+      "name": "tax-determination",
+      "version": "1.0",
+      "tier": "core",
+      "status": "active",
+      "endpoints": {
+        "determine": { "method": "POST", "path": "/tax/determine" }
+      }
+    },
+    {
+      "name": "jurisdiction-resolution",
+      "version": "1.0",
+      "tier": "core",
+      "status": "active",
+      "endpoints": {
+        "resolve": { "method": "POST", "path": "/jurisdictions/resolve" }
+      }
+    },
+    {
+      "name": "product-classification",
+      "version": "1.0",
+      "tier": "standard",
+      "status": "active",
+      "endpoints": {
+        "classify": { "method": "POST", "path": "/tax-codes/classify" }
+      }
+    },
+    {
+      "name": "exemption-validation",
+      "version": "1.0",
+      "tier": "standard",
+      "status": "active",
+      "endpoints": {
+        "validate": { "method": "POST", "path": "/exemptions/validate" }
+      }
+    }
+  ],
+  "transports": [
+    {
+      "type": "rest",
+      "base_url": "https://api.example.com/utcs/v1"
+    },
+    {
+      "type": "mcp",
+      "base_url": "https://api.example.com",
+      "mcp_server_url": "https://api.example.com/mcp",
+      "tools_prefix": "utcs_"
+    }
+  ],
+  "authentication": [
+    {
+      "method": "oauth2_client_credentials",
+      "token_endpoint": "https://identity.example.com/oauth/token",
+      "scopes": ["utcs.determine", "utcs.read"]
+    }
+  ],
+  "input_profiles": ["utcs-standard", "utcs-ucp"],
+  "rounding": {
+    "default_method": "half_up",
+    "granularity": "per_line_per_jurisdiction",
+    "jurisdiction_overrides_applied": true
+  },
+  "conformance_profiles": [
+    {
+      "id": "us-sst",
+      "version": "2025.1",
+      "specification_url": "https://www.streamlinedsalestax.org/"
+    },
+    {
+      "id": "en16931",
+      "version": "2017-A1",
+      "specification_url": "https://docs.peppol.eu/poacc/billing/3.0/"
+    }
+  ],
+  "certification": {
+    "badges": [
+      {
+        "name": "core_compliance",
+        "tier": "core",
+        "certified_date": "2026-01-15",
+        "expires_date": "2027-01-15"
+      },
+      {
+        "name": "exemption_management",
+        "tier": "standard",
+        "certified_date": "2026-01-15",
+        "expires_date": "2027-01-15"
+      }
+    ],
+    "registry_url": "https://registry.example.com/providers/example-tax"
+  }
+}

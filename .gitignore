@@ -1,0 +1,17 @@
+# Node dependencies (regenerable from package-lock.json via `npm install`)
+node_modules/
+
+# npm/debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# OneDrive conflicted-copy artifacts
+*-*conflict*

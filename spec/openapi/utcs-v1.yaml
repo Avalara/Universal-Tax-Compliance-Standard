@@ -1,0 +1,1610 @@
+openapi: 3.1.0
+info:
+  title: Universal Tax Compliance Standard (UTCS)
+  version: "1.0.0"
+  description: |
+    The Universal Tax Compliance Standard (UTCS) is an open standard that defines how tax
+    compliance operations are performed for a transaction, whichever commerce protocol
+    initiated it. This document is the REST transport binding.
+
+    Normative prose is in SPECIFICATION.md. Schemas are under ../schemas/.
+    An informative reference implementation is listed in IMPLEMENTATIONS.md.
+    Worked examples use a neutral provider and are not a live service.
+
+    **Design Principles:** Protocol-agnostic, transport-agnostic, discoverable, composable,
+    provider-neutral, accuracy-over-availability, strict output with flexible input,
+    AI-native error semantics, cryptographically verifiable, low barrier to entry.
+
+    **Maintainers:** UTCS maintainers
+    **License:** Apache License 2.0
+  contact:
+    name: UTCS Maintainers
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: https://{provider}/utcs/v1
+    description: UTCS provider base URL (TLS 1.2+ required)
+    variables:
+      provider:
+        default: api.example.com
+        description: UTCS provider hostname
+
+security:
+  - BearerAuth: []
+  - OAuth2: []
+  - ApiKeyAuth: []
+
+tags:
+  - name: Core
+    description: "Core tier capabilities (MUST implement): tax-determination, jurisdiction-resolution"
+  - name: Standard
+    description: "Standard tier capabilities (SHOULD implement): product-classification, exemption-validation, compliance-documents"
+  - name: Advanced
+    description: "Advanced tier capabilities (MAY implement): cross-border, filing-obligations"
+  - name: Discovery
+    description: Provider discovery and capability advertisement
+
+paths:
+  /.well-known/tax-compliance:
+    get:
+      operationId: getDiscoveryManifest
+      tags: [Discovery]
+      summary: Discover UTCS provider capabilities
+      description: |
+        Returns the provider's UTCS manifest declaring capabilities, transport bindings,
+        authentication requirements, and input profiles. Enables dynamic discovery without
+        hard-coded provider configurations.
+      responses:
+        "200":
+          description: Provider manifest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscoveryManifest"
+
+  /tax/determine:
+    post:
+      operationId: determineTax
+      tags: [Core]
+      summary: Calculate tax for a transaction
+      description: |
+        Core capability: tax-determination@1.0
+
+        Given a Transaction Context (items, addresses, entity type, transaction type),
+        calculate applicable taxes with full jurisdiction breakdown. When commit=true,
+        the provider records the transaction as final; when commit=false, the result
+        is an estimate that can be recalculated freely.
+
+        Each address MUST carry enough for the provider to resolve a taxing jurisdiction:
+        either a text address sufficient for validation (line1, city, postal_code,
+        country; "General Delivery" is accepted on line1) or geocoordinates (latitude,
+        longitude, country). A postal code alone is not sufficient. UTCS sets this
+        minimum input; the provider performs the resolution.
+      parameters:
+        - $ref: "#/components/parameters/InputProfile"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionContext"
+            examples:
+              minimal_b2c_sale:
+                summary: Minimal B2C sale with street-level addresses
+                value:
+                  document_type: sale
+                  transaction_date: "2026-02-17T00:00:00Z"
+                  currency_code: USD
+                  commit: false
+                  entity_type: b2c
+                  addresses:
+                    ship_from:
+                      line1: "100 Ravine Ln NE"
+                      city: "Bainbridge Island"
+                      region: "WA"
+                      postal_code: "98110"
+                      country: "US"
+                    ship_to:
+                      line1: "512 Pike St"
+                      city: "Seattle"
+                      region: "WA"
+                      postal_code: "98101"
+                      country: "US"
+                  lines:
+                    - line_number: "1"
+                      quantity: 1
+                      amount: "49.99"
+                      description: "Wireless Bluetooth headphones"
+              committed_b2b:
+                summary: Committed B2B transaction with exemption
+                value:
+                  document_type: sale
+                  document_code: "INV-2026-00142"
+                  transaction_date: "2026-02-17T10:30:00Z"
+                  currency_code: USD
+                  commit: true
+                  entity_type: b2b
+                  business_identification_no: "US-EIN-12-3456789"
+                  customer:
+                    customer_code: "CUST-0042"
+                    exemption_certificate_id: "CERT-WA-2026-001"
+                  addresses:
+                    ship_from:
+                      line1: "100 Ravine Ln NE"
+                      city: "Bainbridge Island"
+                      region: "WA"
+                      postal_code: "98110"
+                      country: "US"
+                    ship_to:
+                      line1: "400 Broad St"
+                      city: "Seattle"
+                      region: "WA"
+                      postal_code: "98109"
+                      country: "US"
+                  lines:
+                    - line_number: "1"
+                      quantity: 10
+                      amount: "4999.90"
+                      item_code: "SKU-HEADPHONES-BT"
+                      tax_code: "P0000000"
+                      description: "Wireless Bluetooth headphones (bulk)"
+      responses:
+        "200":
+          description: Tax calculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxResult"
+        "400":
+          description: Input validation error (UTCS-3xxx)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Authentication error (UTCS-2xxx)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Tax resolution error (UTCS-4xxx, UTCS-5xxx)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limit exceeded (UTCS-1003)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Service unavailable (UTCS-1001)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /jurisdictions/resolve:
+    post:
+      operationId: resolveJurisdictions
+      tags: [Core]
+      summary: Resolve taxing jurisdictions for an address
+      description: |
+        Core capability: jurisdiction-resolution@1.0
+
+        Given an address or coordinate pair, resolve the applicable taxing jurisdictions
+        and their hierarchy (country, state/province, county, city, special taxing district).
+        Can operate independently for address validation and jurisdiction lookup scenarios.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JurisdictionResolutionRequest"
+            examples:
+              us_street_address:
+                summary: US street address
+                value:
+                  line1: "512 Pike St"
+                  city: "Seattle"
+                  region: "WA"
+                  postal_code: "98101"
+                  country: "US"
+              geocoordinates:
+                summary: Geocoordinate lookup
+                value:
+                  latitude: 47.6097
+                  longitude: -122.3331
+                  country: "US"
+      responses:
+        "200":
+          description: Jurisdictions resolved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JurisdictionResolutionResult"
+              examples:
+                seattle_wa:
+                  summary: Resolved Seattle, WA jurisdictions
+                  value:
+                    address_resolved:
+                      line1: "512 Pike St"
+                      city: "Seattle"
+                      region: "WA"
+                      postal_code: "98101"
+                      country: "US"
+                    jurisdictions:
+                      - jurisdiction_type: country
+                        jurisdiction_code: "US"
+                        jurisdiction_name: "UNITED STATES"
+                        tax_types: [sales_tax, use_tax]
+                      - jurisdiction_type: state
+                        jurisdiction_code: "53"
+                        jurisdiction_name: "WASHINGTON"
+                        tax_types: [sales_tax, use_tax]
+                        parent_jurisdiction_code: "US"
+                      - jurisdiction_type: county
+                        jurisdiction_code: "033"
+                        jurisdiction_name: "KING COUNTY"
+                        tax_types: [sales_tax]
+                        parent_jurisdiction_code: "53"
+                      - jurisdiction_type: city
+                        jurisdiction_code: "5363000"
+                        jurisdiction_name: "SEATTLE"
+                        tax_types: [sales_tax]
+                        parent_jurisdiction_code: "033"
+        "400":
+          description: Input validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Address unresolvable (UTCS-4001)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /tax-codes/classify:
+    post:
+      operationId: classifyProduct
+      tags: [Standard]
+      summary: Map product to tax code
+      description: |
+        Standard capability: product-classification@1.0
+
+        Map product identifiers (SKU, UPC, item codes) or natural-language descriptions
+        to standardized tax codes. Critical for agentic commerce where AI agents describe
+        products conversationally rather than using established classification systems.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassificationRequest"
+            examples:
+              natural_language:
+                summary: Natural-language product description
+                value:
+                  products:
+                    - description: "Organic fair-trade coffee beans, 2 lb bag"
+                      item_code: "SKU-COFFEE-ORG-2LB"
+                    - description: "Infant formula, milk-based, 12.5 oz powder"
+              code_lookup:
+                summary: Code-based lookup
+                value:
+                  products:
+                    - item_code: "SKU-HEADPHONES-BT"
+                      upc: "012345678901"
+      responses:
+        "200":
+          description: Products classified successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassificationResult"
+              examples:
+                classified:
+                  summary: Products mapped to tax codes
+                  value:
+                    classifications:
+                      - description: "Organic fair-trade coffee beans, 2 lb bag"
+                        item_code: "SKU-COFFEE-ORG-2LB"
+                        tax_code: "PF050001"
+                        tax_code_description: "Food for home consumption"
+                        confidence: 0.94
+                      - description: "Infant formula, milk-based, 12.5 oz powder"
+                        tax_code: "PF050101"
+                        tax_code_description: "Infant formula"
+                        confidence: 0.88
+                        alternative_codes:
+                          - tax_code: "PF050001"
+                            tax_code_description: "Food for home consumption"
+                            confidence: 0.42
+        "422":
+          description: Classification failed (UTCS-4002)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /exemptions/validate:
+    post:
+      operationId: validateExemption
+      tags: [Standard]
+      summary: Validate exemption credentials
+      description: |
+        Standard capability: exemption-validation@1.0
+
+        Validate exemption certificates, resale certificates, and other tax-exempt
+        credentials in real-time. Supports programmatic exchange of exemption credentials
+        for B2B agent-to-agent transactions without human intervention.
+
+        Depends on: tax-determination
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExemptionValidationRequest"
+            examples:
+              resale_certificate:
+                summary: Validate a resale certificate for Ohio
+                value:
+                  certificate_id: "EXM-OH-7781"
+                  customer_code: "RESELLER-204"
+                  jurisdiction: "US-OH"
+                  product_tax_code: "P0000000"
+                  transaction_date: "2026-04-22"
+      responses:
+        "200":
+          description: Exemption validated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExemptionValidationResult"
+              examples:
+                valid_certificate:
+                  summary: Certificate valid for the jurisdiction
+                  value:
+                    certificate_id: "EXM-OH-7781"
+                    valid: true
+                    status: valid
+                    exemption_type: resale
+                    expiration_date: "2027-12-31"
+                    jurisdictions_covered: ["US-OH"]
+                    message: "Resale certificate on file and valid for Ohio."
+        "422":
+          description: Exemption validation failed (UTCS-5xxx)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /documents/{document_id}:
+    get:
+      operationId: getComplianceDocument
+      tags: [Standard]
+      summary: Retrieve a compliance document
+      description: |
+        Standard capability: compliance-documents@1.0
+
+        Retrieve an audit-defensible compliance record for a committed transaction.
+
+        Depends on: tax-determination
+      parameters:
+        - name: document_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Compliance document identifier returned by the compliance-documents capability
+      responses:
+        "200":
+          description: Compliance document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceDocument"
+              examples:
+                retrieved_document:
+                  summary: Retrieved compliance document
+                  value:
+                    document_id: "doc_7b31f9a2c5"
+                    document_code: "SO-100450"
+                    result_id: "res_5d81c0a4f2"
+                    created_at: "2026-04-18T09:12:00Z"
+                    status: active
+                    tax_result:
+                      result_id: "res_5d81c0a4f2"
+                      document_code: "SO-100450"
+                      status: committed
+                      total_tax: "8.25"
+                      total_taxable: "100.00"
+                      total_exempt: "0.00"
+                      total_non_taxable: "0.00"
+                      total_amount: "100.00"
+                      currency_code: "USD"
+                      lines:
+                        - line_number: "1"
+                          tax_amount: "8.25"
+                          taxable_amount: "100.00"
+                          exempt_amount: "0.00"
+                          non_taxable_amount: "0.00"
+                          tax_code: "P0000000"
+                          jurisdictions:
+                            - jurisdiction_type: state
+                              jurisdiction_code: "48"
+                              jurisdiction_name: "TEXAS"
+                              tax_type: sales_tax
+                              rate: "0.0625"
+                              taxable_amount: "100.00"
+                              tax_amount: "6.25"
+                              rate_rule_id: "TX-STATE-0625"
+                      attestation:
+                        provider_id: example-tax
+                        provider_name: Example Tax Provider
+                        content_version: "2026.03.1"
+                        calculation_timestamp: "2026-04-18T09:12:00Z"
+                        engine_version: "utcs-engine/4.2.0"
+                    audit_trail:
+                      - timestamp: "2026-04-18T09:12:00Z"
+                        action: committed
+                        details: "Transaction committed and locked for reporting."
+        "404":
+          description: Document not found (UTCS-6002)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /documents:
+    post:
+      operationId: generateComplianceDocument
+      tags: [Standard]
+      summary: Generate a compliance document
+      description: |
+        Generate an audit-defensible compliance record from a committed tax result reference.
+
+        Depends on: tax-determination
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                result_id:
+                  type: string
+                  description: The result_id from a committed Tax Result
+                document_code:
+                  type: string
+                  description: The document_code of the committed transaction
+              required: [result_id]
+      responses:
+        "201":
+          description: Compliance document generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceDocument"
+              examples:
+                generated_document:
+                  summary: Newly generated compliance document
+                  value:
+                    document_id: "doc_7b31f9a2c5"
+                    document_code: "SO-100450"
+                    result_id: "res_5d81c0a4f2"
+                    created_at: "2026-04-18T09:12:00Z"
+                    status: active
+                    tax_result:
+                      result_id: "res_5d81c0a4f2"
+                      document_code: "SO-100450"
+                      status: committed
+                      total_tax: "8.25"
+                      total_taxable: "100.00"
+                      total_exempt: "0.00"
+                      total_non_taxable: "0.00"
+                      total_amount: "100.00"
+                      currency_code: "USD"
+                      lines:
+                        - line_number: "1"
+                          tax_amount: "8.25"
+                          taxable_amount: "100.00"
+                          exempt_amount: "0.00"
+                          non_taxable_amount: "0.00"
+                          tax_code: "P0000000"
+                          jurisdictions:
+                            - jurisdiction_type: state
+                              jurisdiction_code: "48"
+                              jurisdiction_name: "TEXAS"
+                              tax_type: sales_tax
+                              rate: "0.0625"
+                              taxable_amount: "100.00"
+                              tax_amount: "6.25"
+                              rate_rule_id: "TX-STATE-0625"
+                      attestation:
+                        provider_id: example-tax
+                        provider_name: Example Tax Provider
+                        content_version: "2026.03.1"
+                        calculation_timestamp: "2026-04-18T09:12:00Z"
+                        engine_version: "utcs-engine/4.2.0"
+        "409":
+          description: Document already exists (UTCS-6001)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /cross-border/calculate:
+    post:
+      operationId: calculateDuties
+      tags: [Advanced]
+      summary: Calculate cross-border duties and tariffs
+      description: |
+        Advanced capability: cross-border@1.0
+
+        Handles the full complexity of international transactions: customs duty calculation,
+        landed cost estimation, VAT/GST determination, de minimis threshold awareness,
+        country-of-origin rules, HS classification, Incoterms (DAP, DDP, FOB, FCA, EXW,
+        and others per ICC Incoterms 2020), and importer of record designation.
+
+        Depends on: tax-determination, product-classification
+      parameters:
+        - $ref: "#/components/parameters/InputProfile"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CrossBorderRequest"
+            examples:
+              us_to_canada_ddp:
+                summary: US to Canada shipment, DDP, seller as importer of record
+                value:
+                  document_type: sale
+                  document_code: "SO-100540"
+                  transaction_date: "2026-05-20T10:00:00Z"
+                  currency_code: "CAD"
+                  commit: false
+                  entity_type: b2c
+                  country_of_origin: "CN"
+                  incoterms: "DDP"
+                  delivery_terms: "DDP"
+                  is_seller_importer_of_record: true
+                  importer_of_record:
+                    name: "Contoso Retail ULC"
+                    tax_id: "BN-123456789RT0001"
+                  trade_agreements: ["CUSMA"]
+                  customer:
+                    customer_code: "CUST-CA-9930"
+                  addresses:
+                    ship_from:
+                      line1: "512 S Mangum St"
+                      city: "Durham"
+                      region: "NC"
+                      postal_code: "27701"
+                      country: "US"
+                    ship_to:
+                      line1: "200 Bay St"
+                      city: "Toronto"
+                      region: "ON"
+                      postal_code: "M5J 2J2"
+                      country: "CA"
+                  lines:
+                    - line_number: "1"
+                      quantity: 2
+                      amount: "300.00"
+                      item_code: "WIDGET-BLUE"
+                      hs_code: "8543.70"
+      responses:
+        "200":
+          description: Duties and tariffs calculated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrossBorderResult"
+              examples:
+                landed_cost:
+                  summary: Duties, taxes, and landed cost
+                  value:
+                    tax_result:
+                      result_id: "res_9a70b2c8e1"
+                      document_code: "SO-100540"
+                      status: calculated
+                      total_tax: "39.00"
+                      total_taxable: "300.00"
+                      total_exempt: "0.00"
+                      total_non_taxable: "0.00"
+                      total_amount: "300.00"
+                      currency_code: "CAD"
+                      lines:
+                        - line_number: "1"
+                          tax_amount: "39.00"
+                          taxable_amount: "300.00"
+                          exempt_amount: "0.00"
+                          non_taxable_amount: "0.00"
+                          tax_code: "P0000000"
+                          jurisdictions:
+                            - jurisdiction_type: province
+                              jurisdiction_code: "CA-ON"
+                              jurisdiction_name: "ONTARIO"
+                              tax_type: gst
+                              rate: "0.13"
+                              taxable_amount: "300.00"
+                              tax_amount: "39.00"
+                              rate_rule_id: "CA-ON-HST-13"
+                      attestation:
+                        provider_id: example-tax
+                        provider_name: Example Tax Provider
+                        content_version: "2026.05.1"
+                        calculation_timestamp: "2026-04-18T09:12:00Z"
+                        engine_version: "utcs-engine/4.2.0"
+                    duties:
+                      - hs_code: "8543.70"
+                        description: "Electrical machines and apparatus"
+                        duty_rate: "0.00"
+                        duty_amount: "0.00"
+                        trade_agreement_applied: "CUSMA"
+                    landed_cost:
+                      product_cost: "300.00"
+                      duties_total: "0.00"
+                      taxes_total: "39.00"
+                      shipping_cost: "25.00"
+                      total_landed_cost: "364.00"
+                    de_minimis:
+                      threshold_amount: "20.00"
+                      threshold_currency: "CAD"
+                      below_threshold: false
+                    attestation:
+                      provider_id: example-tax
+                      provider_name: Example Tax Provider
+                      content_version: "2026.05.1"
+                      calculation_timestamp: "2026-04-18T09:12:00Z"
+                      engine_version: "utcs-engine/4.2.0"
+        "422":
+          description: Cross-border calculation error (UTCS-7xxx)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /obligations:
+    get:
+      operationId: getFilingObligations
+      tags: [Advanced]
+      summary: Check filing obligations
+      description: |
+        Advanced capability: filing-obligations@1.0
+
+        Track nexus accumulation, economic nexus threshold monitoring, and filing
+        requirement awareness across jurisdictions.
+
+        Depends on: tax-determination, jurisdiction-resolution
+      parameters:
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Start of the reporting period
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: End of the reporting period
+        - name: jurisdiction
+          in: query
+          schema:
+            type: string
+          description: Filter by jurisdiction code
+      responses:
+        "200":
+          description: Filing obligations summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FilingObligationsSummary"
+              examples:
+                nexus_summary:
+                  summary: Nexus and filing obligations for a period
+                  value:
+                    period:
+                      start_date: "2026-01-01"
+                      end_date: "2026-03-31"
+                    obligations:
+                      - jurisdiction_code: "US-TX"
+                        jurisdiction_name: "Texas"
+                        nexus_type: economic
+                        filing_frequency: monthly
+                        threshold:
+                          type: revenue
+                          amount: "500000.00"
+                          current_accumulation: "512300.00"
+                          percentage_reached: 102.5
+                          exceeded: true
+                        next_filing_date: "2026-04-20"
+                        status: active
+                      - jurisdiction_code: "US-CO"
+                        jurisdiction_name: "Colorado"
+                        nexus_type: economic
+                        filing_frequency: quarterly
+                        threshold:
+                          type: revenue
+                          amount: "100000.00"
+                          current_accumulation: "83400.00"
+                          percentage_reached: 83.4
+                          exceeded: false
+                        next_filing_date: "2026-04-20"
+                        status: approaching_threshold
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Simple API key authentication via Bearer token
+    OAuth2:
+      type: oauth2
+      description: Machine-to-machine authentication with scoped permissions. Recommended for production.
+      flows:
+        clientCredentials:
+          tokenUrl: https://{provider}/oauth/token
+          scopes:
+            utcs:read: Read tax determinations and documents
+            utcs:write: Create and commit tax determinations
+            utcs:admin: Administrative operations
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Simple key passed in a standard header
+
+  parameters:
+    InputProfile:
+      name: X-UTCS-Input-Profile
+      in: header
+      required: false
+      schema:
+        type: string
+        default: utcs-standard
+        enum: [utcs-standard, utcs-ucp, utcs-acp, utcs-generic]
+      description: |
+        Input profile being used. Can also be specified via the `profile` field
+        in the request body. If unspecified, utcs-standard is assumed.
+
+  schemas:
+    # -- Common schemas --
+    Address:
+      type: object
+      description: "Address for jurisdiction resolution. Must provide either text address path or geocoordinate path."
+      properties:
+        line1:
+          type: string
+          description: Street address. The literal value "General Delivery" is accepted for non-standard locations.
+        line2:
+          type: string
+        line3:
+          type: string
+        city:
+          type: string
+        region:
+          type: string
+          description: "State/province. ISO 3166-2 recommended. REQUIRED for US, CA, AU, IN."
+        postal_code:
+          type: string
+        country:
+          type: string
+          pattern: "^[A-Z]{2}$"
+          description: ISO 3166-1 alpha-2 country code
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          minimum: -180
+          maximum: 180
+        location_code:
+          type: string
+          description: Identifier of a registered business location (outlet, store, warehouse) at this address. Used where a jurisdiction requires outlet-level attribution for local reporting.
+      required: [country]
+      oneOf:
+        - required: [line1, city, postal_code, country]
+          title: Text address path
+        - required: [latitude, longitude, country]
+          title: Geocoordinate path
+
+    LineItem:
+      type: object
+      description: Line item within a Transaction Context
+      properties:
+        line_number:
+          type: string
+        quantity:
+          type: number
+          not: { const: 0 }
+        amount:
+          type: string
+          pattern: "^-?\\d+(\\.\\d+)?$"
+          description: "Decimal string (e.g., \"49.99\")"
+        item_code:
+          type: string
+        description:
+          type: string
+        tax_code:
+          type: string
+        tax_included:
+          type: boolean
+          default: false
+        discounted:
+          type: boolean
+          default: false
+          description: If true, the transaction-level discount is allocated to this line.
+        hs_code:
+          type: string
+        revenue_account:
+          type: string
+        entity_use_code:
+          type: string
+          description: Per-line entity/use-based exemption reason, overriding the customer-level value. Same vocabulary as the result exemption_reason.
+          enum: [resale, government, charitable_nonprofit, religious_educational, agricultural_production, industrial_production, direct_pay, direct_mail, foreign_diplomat, export, intra_community_supply, other]
+        exemption_certificate_id:
+          type: string
+          description: Per-line exemption certificate identifier, overriding the customer-level value for this line.
+        addresses:
+          type: object
+          description: Per-line address override for split-origin or drop-ship fulfillment.
+          properties:
+            ship_from:
+              $ref: "#/components/schemas/Address"
+            ship_to:
+              $ref: "#/components/schemas/Address"
+        tax_override:
+          type: object
+          description: Per-line override of the tax calculation for this line only.
+          properties:
+            type:
+              type: string
+              enum: [tax_date, tax_amount, exemption]
+            value:
+              type: string
+            reason:
+              type: string
+          required: [type, value, reason]
+        parameters:
+          type: object
+          additionalProperties: true
+      required: [line_number, quantity, amount]
+
+    JurisdictionBreakdown:
+      type: object
+      properties:
+        jurisdiction_type:
+          type: string
+          enum: [country, state, province, county, city, district, special]
+        jurisdiction_code:
+          type: string
+          description: Standardized jurisdiction identifier, interpreted per jurisdiction_code_system.
+        jurisdiction_code_system:
+          type: string
+          description: Code system jurisdiction_code is drawn from. UTCS ships no jurisdiction codes; the provider names the system it used. The us-sst profile REQUIRES fips.
+          enum: [fips, iso-3166-1, iso-3166-2, provider-defined]
+          default: provider-defined
+        jurisdiction_name:
+          type: string
+        tax_type:
+          type: string
+          description: Provider-derived OUTPUT determined from origin, destination, entity type, date, and nexus. Never supplied by the caller.
+          enum: [sales_tax, sellers_use, consumer_use, use_tax, vat, gst, excise, duty, environmental_fee]
+        tax_category:
+          type: string
+          description: Taxability treatment as a UN/EDIFACT 5305 (UNCL5305) category code. Provider-derived OUTPUT. Maps to UBL cac:TaxCategory/cbc:ID.
+          enum: [S, Z, E, AE, K, G, O, L, M, B]
+        fee_basis:
+          type: string
+          description: "How this levy is computed. ad_valorem (default): tax_amount equals taxable_amount multiplied by rate. flat: a fixed statutory amount per transaction or delivery, independent of order value (for example, Colorado's retail delivery fee); rate does not apply. per_unit: a fixed amount per unit, tax_amount equals unit_rate multiplied by units (for example, per-tire or per-battery environmental fees)."
+          enum: [ad_valorem, flat, per_unit]
+          default: ad_valorem
+        rate:
+          type: string
+          description: Applies to the ad_valorem fee basis; omitted for flat and per_unit levies.
+          pattern: "^-?\\d+(\\.\\d+)?$"
+        unit_rate:
+          type: string
+          description: Fee charged per unit for the per_unit fee basis; tax_amount equals unit_rate multiplied by units.
+          pattern: "^-?\\d+(\\.\\d+)?$"
+        units:
+          type: string
+          description: Count of units the per_unit fee applies to (fractional units allowed for weight- or volume-based fees).
+          pattern: "^-?\\d+(\\.\\d+)?$"
+        taxable_amount:
+          type: string
+          pattern: "^-?\\d+(\\.\\d+)?$"
+        tax_amount:
+          type: string
+          description: Levy calculated by this jurisdiction. Derivation depends on fee_basis (taxable_amount times rate, a fixed flat amount, or unit_rate times units).
+          pattern: "^-?\\d+(\\.\\d+)?$"
+        rate_rule_id:
+          type: string
+        exemption_applied:
+          oneOf:
+            - type: object
+              properties:
+                certificate_id:
+                  type: string
+                exemption_reason:
+                  type: string
+                  description: Controlled reason the exemption was granted. Aligned to the SSTGB Form F0003 reason categories and extended for cross-border use.
+                  enum: [resale, government, charitable_nonprofit, religious_educational, agricultural_production, industrial_production, direct_pay, direct_mail, foreign_diplomat, export, intra_community_supply, other]
+                exemption_type:
+                  type: string
+                  description: Optional provider-specific refinement of exemption_reason (free text).
+              required: [certificate_id, exemption_reason]
+            - type: "null"
+      required:
+        - jurisdiction_type
+        - jurisdiction_code
+        - jurisdiction_name
+        - tax_type
+        - taxable_amount
+        - tax_amount
+        - rate_rule_id
+      allOf:
+        - if:
+            properties:
+              fee_basis:
+                const: ad_valorem
+          then:
+            required: [rate]
+        - if:
+            properties:
+              fee_basis:
+                const: per_unit
+            required: [fee_basis]
+          then:
+            required: [unit_rate, units]
+
+    Attestation:
+      type: object
+      description: Provider attestation for auditability
+      properties:
+        provider_id:
+          type: string
+        provider_name:
+          type: string
+        content_version:
+          type: string
+        calculation_timestamp:
+          type: string
+          format: date-time
+        engine_version:
+          type: string
+        signature:
+          type: string
+      required: [provider_id, provider_name, content_version, calculation_timestamp, engine_version]
+
+    ErrorResponse:
+      type: object
+      description: "Three-layer error response: structured code, human-readable message, machine-actionable recovery hints. UTCS never returns approximate tax — errors are explicit."
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              pattern: "^UTCS-[0-9]{4}$"
+              description: Structured UTCS error code. The enumeration is the registry in registries/error-codes.json.
+              enum:
+                - UTCS-1001
+                - UTCS-1002
+                - UTCS-1003
+                - UTCS-2001
+                - UTCS-2002
+                - UTCS-3001
+                - UTCS-3002
+                - UTCS-3003
+                - UTCS-3004
+                - UTCS-4001
+                - UTCS-4002
+                - UTCS-4003
+                - UTCS-4004
+                - UTCS-5001
+                - UTCS-5002
+                - UTCS-5003
+                - UTCS-5004
+                - UTCS-6001
+                - UTCS-6002
+                - UTCS-7001
+                - UTCS-7002
+                - UTCS-7003
+                - UTCS-8001
+                - UTCS-8002
+            category:
+              type: string
+              enum: [service, authentication, input, tax_resolution, exemption, document, cross_border, elr]
+            message:
+              type: string
+              description: Human-readable error description
+            recovery:
+              type: object
+              description: Machine-actionable recovery guidance for AI agents
+              properties:
+                action:
+                  type: string
+                  enum:
+                    - provide_additional_data
+                    - retry
+                    - retry_or_block
+                    - use_alternative_capability
+                    - contact_provider
+                    - not_recoverable
+                required_fields:
+                  type: array
+                  items:
+                    type: string
+                optional_fields:
+                  type: array
+                  items:
+                    type: string
+                suggestion:
+                  type: string
+                retry_after_seconds:
+                  type: integer
+                  minimum: 0
+                compliance_warning:
+                  type: string
+                  description: "REQUIRED for service unavailability errors"
+                transaction_flag:
+                  type: string
+              required: [action]
+          required: [code, category, message, recovery]
+      required: [error]
+
+    # -- Discovery --
+    DiscoveryManifest:
+      $ref: "../schemas/discovery-manifest.schema.json"
+
+    # -- Core request/response --
+    TransactionContext:
+      type: object
+      description: Canonical input to all UTCS tax determination operations
+      properties:
+        profile:
+          type: string
+          default: utcs-standard
+        document_type:
+          type: string
+          enum: [sale, return, purchase_order, inventory_transfer, reverse_charge, customs, void]
+        document_code:
+          type: string
+        company_code:
+          type: string
+          description: Identifier of the selling entity the transaction belongs to. Routes to the correct registered entity (nexus, registration, reporting). Distinct from business_identification_no.
+        transaction_date:
+          type: string
+          format: date-time
+        currency_code:
+          type: string
+          pattern: "^[A-Z]{3}$"
+        commit:
+          type: boolean
+        entity_type:
+          type: string
+          enum: [b2c, b2b, b2g]
+        customer:
+          type: object
+          properties:
+            customer_code:
+              type: string
+            tax_registration_ids:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  value:
+                    type: string
+                  jurisdiction:
+                    type: string
+                required: [type, value]
+            exemption_certificate_id:
+              type: string
+            entity_use_code:
+              type: string
+              description: Entity/use-based exemption reason asserting the buyer is exempt by status or intended use, independent of a certificate. Same vocabulary as the result exemption_reason.
+              enum: [resale, government, charitable_nonprofit, religious_educational, agricultural_production, industrial_production, direct_pay, direct_mail, foreign_diplomat, export, intra_community_supply, other]
+        addresses:
+          type: object
+          properties:
+            ship_from:
+              $ref: "#/components/schemas/Address"
+            ship_to:
+              $ref: "#/components/schemas/Address"
+            single_location:
+              $ref: "#/components/schemas/Address"
+            point_of_order_acceptance:
+              $ref: "#/components/schemas/Address"
+            point_of_order_origin:
+              $ref: "#/components/schemas/Address"
+            goods_place_or_service_rendered:
+              $ref: "#/components/schemas/Address"
+            import:
+              $ref: "#/components/schemas/Address"
+            bill_to:
+              $ref: "#/components/schemas/Address"
+          oneOf:
+            - required: [ship_from, ship_to]
+            - required: [single_location]
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/LineItem"
+          minItems: 1
+        discount:
+          type: string
+          pattern: "^-?\\d+(\\.\\d+)?$"
+        marketplace:
+          type: object
+          description: Marketplace facilitator context. Present when a marketplace facilitator may be liable to collect and remit tax.
+          properties:
+            facilitated:
+              type: boolean
+            liable_party:
+              type: string
+              enum: [marketplace_facilitator, seller]
+            facilitator_id:
+              type: string
+          required: [facilitated, liable_party]
+        business_identification_no:
+          type: string
+          description: The selling entity's VAT/GST tax registration number. For routing to the selling entity, use company_code.
+        reference_code:
+          type: string
+          description: Optional reference to a related document or external system. For a return or adjustment, set this to the original transaction's document_code.
+        purchase_order_number:
+          type: string
+          description: Buyer's purchase order number. Optional; does not affect tax determination.
+        exchange_rate:
+          type: number
+          exclusiveMinimum: 0
+          default: 1.0
+        exchange_rate_currency_code:
+          type: string
+          pattern: "^[A-Z]{3}$"
+        delivery_terms:
+          type: string
+          description: Incoterms (ICC Incoterms 2020). For cross-border, DDP places import VAT/GST and duty on the seller; other terms place them on the buyer as importer of record.
+          enum: [EXW, FCA, CPT, CIP, DAP, DPU, DDP, FAS, FOB, CFR, CIF]
+        is_seller_importer_of_record:
+          type: boolean
+          description: For cross-border, true when the seller is the importer of record and liable for import taxes and duties. When omitted, inferred from delivery_terms.
+        tax_override:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [tax_date, tax_amount, exemption]
+            value:
+              type: string
+            reason:
+              type: string
+          required: [type, value, reason]
+        parameters:
+          type: object
+          additionalProperties: true
+      required: [document_type, transaction_date, currency_code, commit, entity_type, addresses, lines]
+
+    TaxResult:
+      type: object
+      description: "Canonical output — strictly defined and invariant across all providers"
+      properties:
+        result_id:
+          type: string
+        document_code:
+          type: string
+        status:
+          type: string
+          enum: [calculated, committed, voided, adjusted]
+        total_tax:
+          type: string
+          pattern: "^-?\\d+(\\.\\d+)?$"
+        total_tax_calculated:
+          type: string
+          description: Total tax the engine computed before any tax_override. Present only when an override changed the result.
+          pattern: "^-?\\d+(\\.\\d+)?$"
+        total_taxable:
+          type: string
+          pattern: "^-?\\d+(\\.\\d+)?$"
+        total_exempt:
+          type: string
+          pattern: "^-?\\d+(\\.\\d+)?$"
+        total_non_taxable:
+          type: string
+          pattern: "^-?\\d+(\\.\\d+)?$"
+        total_discount:
+          type: string
+          pattern: "^-?\\d+(\\.\\d+)?$"
+        total_amount:
+          type: string
+          pattern: "^-?\\d+(\\.\\d+)?$"
+        currency_code:
+          type: string
+          pattern: "^[A-Z]{3}$"
+        lines:
+          type: array
+          items:
+            type: object
+            properties:
+              line_number:
+                type: string
+              tax_amount:
+                type: string
+                pattern: "^-?\\d+(\\.\\d+)?$"
+              tax_calculated:
+                type: string
+                description: Tax the engine computed for this line before any tax_override. Present only when an override changed the line.
+                pattern: "^-?\\d+(\\.\\d+)?$"
+              taxable_amount:
+                type: string
+                pattern: "^-?\\d+(\\.\\d+)?$"
+              exempt_amount:
+                type: string
+                pattern: "^-?\\d+(\\.\\d+)?$"
+              non_taxable_amount:
+                type: string
+                pattern: "^-?\\d+(\\.\\d+)?$"
+              discount_amount:
+                type: string
+                pattern: "^-?\\d+(\\.\\d+)?$"
+              tax_code:
+                type: string
+              tax_code_description:
+                type: string
+              jurisdictions:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JurisdictionBreakdown"
+            required: [line_number, tax_amount, taxable_amount, exempt_amount, non_taxable_amount, tax_code, jurisdictions]
+          minItems: 1
+        jurisdictions:
+          type: array
+          description: "Optional order-level rollup of tax by jurisdiction across the whole transaction. Each entry sums one jurisdiction's tax over all lines. Convenience aggregation; the per-line detail in lines[].jurisdictions[] remains authoritative."
+          items:
+            type: object
+            properties:
+              jurisdiction_type:
+                type: string
+                enum: [country, state, province, county, city, district, special]
+              jurisdiction_code:
+                type: string
+              jurisdiction_code_system:
+                type: string
+                enum: [fips, iso-3166-1, iso-3166-2, provider-defined]
+                default: provider-defined
+              jurisdiction_name:
+                type: string
+              tax_type:
+                type: string
+                enum: [sales_tax, sellers_use, consumer_use, use_tax, vat, gst, excise, duty, environmental_fee]
+              taxable_amount:
+                type: string
+                pattern: "^-?\\d+(\\.\\d+)?$"
+              tax_amount:
+                type: string
+                pattern: "^-?\\d+(\\.\\d+)?$"
+            required: [jurisdiction_type, jurisdiction_code, jurisdiction_name, tax_type, taxable_amount, tax_amount]
+        attestation:
+          $ref: "#/components/schemas/Attestation"
+        conformance:
+          type: array
+          description: "Conformance profiles the provider applied when producing this result (OUTPUT annotation). Declared in the provider manifest under conformance_profiles; never supplied by the caller. Example: a US sale returns [{id: us-sst}]; an EU invoice returns [{id: en16931}]."
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              version:
+                type: string
+            required: [id]
+        messages:
+          type: array
+          description: Informational, warning, and error notices raised during calculation (address corrected, tax code defaulted, nexus not established). Advisory output; callers SHOULD surface warnings.
+          items:
+            type: object
+            properties:
+              severity:
+                type: string
+                enum: [info, warning, error]
+              code:
+                type: string
+              summary:
+                type: string
+              refers_to:
+                type: string
+              source:
+                type: string
+            required: [severity, summary]
+        adjustment:
+          type: object
+          description: Present when status is 'adjusted'. Explains why the committed transaction was adjusted and links to the prior result.
+          properties:
+            reason:
+              type: string
+            description:
+              type: string
+            adjusted_from_result_id:
+              type: string
+          required: [reason]
+      required:
+        - result_id
+        - document_code
+        - status
+        - total_tax
+        - total_taxable
+        - total_exempt
+        - total_non_taxable
+        - total_amount
+        - currency_code
+        - lines
+        - attestation
+
+    # -- Jurisdiction resolution --
+    JurisdictionResolutionRequest:
+      $ref: ../schemas/jurisdiction-resolution-request.schema.json
+    JurisdictionResolutionResult:
+      $ref: ../schemas/jurisdiction-resolution-result.schema.json
+
+    # -- Product classification --
+    ClassificationRequest:
+      $ref: ../schemas/classification-request.schema.json
+    ClassificationResult:
+      $ref: ../schemas/classification-result.schema.json
+
+    # -- Exemption validation --
+    ExemptionValidationRequest:
+      $ref: ../schemas/exemption-validation-request.schema.json
+    ExemptionValidationResult:
+      $ref: ../schemas/exemption-validation-result.schema.json
+
+    # -- Compliance documents --
+    ComplianceDocument:
+      type: object
+      properties:
+        document_id:
+          type: string
+        document_code:
+          type: string
+        result_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, voided, adjusted]
+        tax_result:
+          $ref: "#/components/schemas/TaxResult"
+        audit_trail:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              action:
+                type: string
+              details:
+                type: string
+      required: [document_id, document_code, result_id, created_at, status, tax_result]
+
+    # -- Cross-border --
+    CrossBorderRequest:
+      type: object
+      description: Cross-border transaction request extending Transaction Context with trade-specific fields
+      allOf:
+        - $ref: "#/components/schemas/TransactionContext"
+        - type: object
+          properties:
+            country_of_origin:
+              type: string
+              pattern: "^[A-Z]{2}$"
+              description: ISO 3166-1 alpha-2 country of origin
+            incoterms:
+              type: string
+              description: ICC Incoterms 2020 delivery terms
+              enum: [DAP, DDP, FOB, FCA, EXW, CIF, CFR, CPT, CIP, FAS, DPU]
+            importer_of_record:
+              type: object
+              properties:
+                name:
+                  type: string
+                tax_id:
+                  type: string
+                address:
+                  $ref: "#/components/schemas/Address"
+              required: [name, tax_id]
+            trade_agreements:
+              type: array
+              items:
+                type: string
+              description: Applicable trade agreements (e.g., USMCA, EU-UK TCA)
+          required: [country_of_origin, incoterms]
+
+    CrossBorderResult:
+      type: object
+      properties:
+        tax_result:
+          $ref: "#/components/schemas/TaxResult"
+        duties:
+          type: array
+          items:
+            type: object
+            properties:
+              hs_code:
+                type: string
+              description:
+                type: string
+              duty_rate:
+                type: string
+                pattern: "^-?\\d+(\\.\\d+)?$"
+              duty_amount:
+                type: string
+                pattern: "^-?\\d+(\\.\\d+)?$"
+              trade_agreement_applied:
+                type: string
+            required: [hs_code, duty_rate, duty_amount]
+        landed_cost:
+          type: object
+          properties:
+            product_cost:
+              type: string
+              pattern: "^-?\\d+(\\.\\d+)?$"
+            duties_total:
+              type: string
+              pattern: "^-?\\d+(\\.\\d+)?$"
+            taxes_total:
+              type: string
+              pattern: "^-?\\d+(\\.\\d+)?$"
+            shipping_cost:
+              type: string
+              pattern: "^-?\\d+(\\.\\d+)?$"
+            total_landed_cost:
+              type: string
+              pattern: "^-?\\d+(\\.\\d+)?$"
+          required: [product_cost, duties_total, taxes_total, total_landed_cost]
+        de_minimis:
+          type: object
+          properties:
+            threshold_amount:
+              type: string
+              pattern: "^-?\\d+(\\.\\d+)?$"
+            threshold_currency:
+              type: string
+            below_threshold:
+              type: boolean
+              description: If true, the shipment is below de minimis and duties are waived
+          required: [threshold_amount, threshold_currency, below_threshold]
+        attestation:
+          $ref: "#/components/schemas/Attestation"
+      required: [tax_result, duties, landed_cost, attestation]
+
+    # -- Filing obligations --
+    FilingObligationsSummary:
+      type: object
+      properties:
+        period:
+          type: object
+          properties:
+            start_date:
+              type: string
+              format: date
+            end_date:
+              type: string
+              format: date
+        obligations:
+          type: array
+          items:
+            type: object
+            properties:
+              jurisdiction_code:
+                type: string
+              jurisdiction_name:
+                type: string
+              nexus_type:
+                type: string
+                enum: [physical, economic, marketplace_facilitator, voluntary]
+              filing_frequency:
+                type: string
+                enum: [monthly, quarterly, semi_annually, annually]
+              threshold:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum: [revenue, transaction_count, combined]
+                  amount:
+                    type: string
+                    pattern: "^\\d+(\\.\\d+)?$"
+                  current_accumulation:
+                    type: string
+                    pattern: "^\\d+(\\.\\d+)?$"
+                  percentage_reached:
+                    type: number
+                    minimum: 0
+                  exceeded:
+                    type: boolean
+                required: [type, amount, current_accumulation, exceeded]
+              next_filing_date:
+                type: string
+                format: date
+              status:
+                type: string
+                enum: [active, approaching_threshold, below_threshold, new]
+            required: [jurisdiction_code, jurisdiction_name, status]
+      required: [obligations]
+# -- Webhook schemas --
+webhooks:
+  taxCommitted:
+    post:
+      summary: Tax determination committed
+      operationId: onTaxCommitted
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/webhooks/tax-committed.schema.json
+      responses:
+        "200":
+          description: Webhook received
+
+  documentGenerated:
+    post:
+      summary: Compliance document created
+      operationId: onDocumentGenerated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/webhooks/document-generated.schema.json
+      responses:
+        "200":
+          description: Webhook received
+
+  obligationThresholdWarning:
+    post:
+      summary: Approaching nexus threshold
+      operationId: onObligationThresholdWarning
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/webhooks/obligation-threshold-warning.schema.json
+      responses:
+        "200":
+          description: Webhook received
+
+  obligationThresholdCrossed:
+    post:
+      summary: Nexus threshold exceeded
+      operationId: onObligationThresholdCrossed
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/webhooks/obligation-threshold-crossed.schema.json
+      responses:
+        "200":
+          description: Webhook received

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/common/address.schema.json",
+  "title": "UTCS Address",
+  "description": "Address structure for jurisdiction resolution. An address MUST carry enough for the provider to resolve a taxing jurisdiction: either a text address sufficient for validation (line1, city, postal_code, country) or geocoordinates (latitude, longitude, country). A postal code alone is not sufficient. UTCS sets this minimum input; the provider performs the resolution.",
+  "type": "object",
+  "properties": {
+    "line1": {
+      "type": "string",
+      "description": "Street address. REQUIRED when latitude/longitude are not provided. The literal value \"General Delivery\" is accepted for locations without a registered street address."
+    },
+    "line2": {
+      "type": "string",
+      "description": "Suite, unit, etc."
+    },
+    "line3": {
+      "type": "string",
+      "description": "Third address line. Common in international addresses (building name, floor, district)."
+    },
+    "city": {
+      "type": "string",
+      "description": "City or locality. REQUIRED when latitude/longitude are not provided."
+    },
+    "region": {
+      "type": "string",
+      "description": "State, province, or region. REQUIRED for US, CA, AU, IN. ISO 3166-2 subdivision code recommended."
+    },
+    "postal_code": {
+      "type": "string",
+      "description": "Postal or ZIP code. REQUIRED when using the text address path. A postal code alone is never sufficient for jurisdiction resolution."
+    },
+    "country": {
+      "type": "string",
+      "description": "ISO 3166-1 alpha-2 country code.",
+      "pattern": "^[A-Z]{2}$",
+      "minLength": 2,
+      "maxLength": 2
+    },
+    "latitude": {
+      "type": "number",
+      "description": "Latitude coordinate. REQUIRED when line1/city are not provided. When provided, coordinates take precedence for jurisdiction resolution.",
+      "minimum": -90,
+      "maximum": 90
+    },
+    "longitude": {
+      "type": "number",
+      "description": "Longitude coordinate. REQUIRED when line1/city are not provided.",
+      "minimum": -180,
+      "maximum": 180
+    },
+    "location_code": {
+      "type": "string",
+      "description": "Identifier of a registered business location (outlet, store, warehouse) at this address. Optional. Used where a jurisdiction requires outlet-level attribution for local reporting; the provider maps it to the registered location it has on file."
+    }
+  },
+  "required": ["country"],
+  "oneOf": [
+    {
+      "title": "Text address path",
+      "required": ["line1", "city", "postal_code", "country"]
+    },
+    {
+      "title": "Geocoordinate path",
+      "required": ["latitude", "longitude", "country"]
+    }
+  ],
+  "additionalProperties": false
+}

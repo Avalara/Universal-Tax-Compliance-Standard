@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/discovery-manifest.schema.json",
+  "title": "UTCS Discovery Manifest",
+  "description": "Published at /.well-known/tax-compliance. Declares the provider's capabilities, transport bindings, authentication requirements, and input profiles. Enables dynamic discovery without hard-coded provider configurations.",
+  "type": "object",
+  "properties": {
+    "utcs_version": {
+      "type": "string",
+      "description": "Version of the UTCS envelope specification this manifest conforms to.",
+      "pattern": "^\\d+\\.\\d+$",
+      "examples": ["1.0"]
+    },
+    "provider": {
+      "type": "object",
+      "description": "Provider identity information.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the UTCS provider."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable provider name."
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description of the provider and its coverage."
+        },
+        "website": {
+          "type": "string",
+          "format": "uri",
+          "description": "Provider's public website."
+        },
+        "support_contact": {
+          "type": "string",
+          "format": "email",
+          "description": "Support contact email."
+        }
+      },
+      "required": ["id", "name"]
+    },
+    "capabilities": {
+      "type": "array",
+      "description": "Capabilities this provider implements. Core tier capabilities (tax-determination, jurisdiction-resolution) are REQUIRED.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Capability identifier.",
+            "enum": [
+              "tax-determination",
+              "jurisdiction-resolution",
+              "product-classification",
+              "exemption-validation",
+              "compliance-documents",
+              "cross-border",
+              "filing-obligations"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "description": "Capability version in major.minor format.",
+            "pattern": "^\\d+\\.\\d+$"
+          },
+          "tier": {
+            "type": "string",
+            "description": "Capability tier.",
+            "enum": ["core", "standard", "advanced"]
+          },
+          "status": {
+            "type": "string",
+            "description": "Operational status of this capability.",
+            "enum": ["active", "beta", "deprecated"],
+            "default": "active"
+          },
+          "endpoints": {
+            "type": "object",
+            "description": "REST endpoint paths for this capability, relative to the REST transport base_url. Each path MUST be an operation in the REST binding. There is no void operation: a void is document_type \"void\" on POST /tax/determine.",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "method": {
+                  "type": "string",
+                  "enum": ["GET", "POST", "PUT", "DELETE"]
+                },
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": ["method", "path"]
+            }
+          }
+        },
+        "required": ["name", "version", "tier"]
+      },
+      "minItems": 2
+    },
+    "transports": {
+      "type": "array",
+      "description": "Transport bindings supported by this provider.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Transport binding type. rest, mcp, and webhook have published bindings in this version. a2a is a reserved value: a provider MUST NOT advertise it until a binding is published. No A2A binding is published in this version.",
+            "enum": ["rest", "mcp", "a2a", "webhook"]
+          },
+          "base_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Base URL for this transport. MUST use HTTPS."
+          },
+          "mcp_server_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "MCP server endpoint. Required when type is 'mcp'."
+          },
+          "tools_prefix": {
+            "type": "string",
+            "description": "MCP tool name prefix. Default: 'utcs_'.",
+            "default": "utcs_"
+          },
+          "webhook_registration_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL for registering webhook callbacks. Required when type is 'webhook'."
+          }
+        },
+        "required": ["type"]
+      },
+      "minItems": 1
+    },
+    "authentication": {
+      "type": "array",
+      "description": "Authentication methods supported. Providers MUST support at least one. OAuth 2.0 Client Credentials SHOULD be supported for production.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "description": "Authentication method type.",
+            "enum": ["bearer_token", "oauth2_client_credentials", "mtls", "api_key"]
+          },
+          "token_endpoint": {
+            "type": "string",
+            "format": "uri",
+            "description": "OAuth2 token endpoint. REQUIRED when method is 'oauth2_client_credentials'."
+          },
+          "scopes": {
+            "type": "array",
+            "description": "Available OAuth2 scopes.",
+            "items": { "type": "string" }
+          },
+          "header_name": {
+            "type": "string",
+            "description": "Header name for API key authentication. REQUIRED when method is 'api_key'.",
+            "default": "X-API-Key"
+          },
+          "certificate_requirements": {
+            "type": "object",
+            "description": "Certificate requirements for mTLS. REQUIRED when method is 'mtls'.",
+            "properties": {
+              "issuer": { "type": "string" },
+              "subject_pattern": { "type": "string" }
+            }
+          }
+        },
+        "required": ["method"]
+      },
+      "minItems": 1
+    },
+    "input_profiles": {
+      "type": "array",
+      "description": "Input profiles accepted by this provider. 'utcs-standard' MUST always be included.",
+      "items": {
+        "type": "string",
+        "description": "Input profile identifier."
+      },
+      "contains": {
+        "const": "utcs-standard"
+      },
+      "minItems": 1,
+      "examples": [
+        ["utcs-standard", "utcs-ucp", "utcs-acp", "utcs-generic"]
+      ]
+    },
+    "rounding": {
+      "type": "object",
+      "description": "Provider's rounding configuration. Providers MUST declare this so consumers can verify rounding behavior matches their accounting and reconciliation requirements.",
+      "properties": {
+        "default_method": {
+          "type": "string",
+          "description": "Default rounding method. UTCS default is half-up rounding to the currency's standard minor unit per ISO 4217. This default is consistent with SSUTA Section 324 (the SST rounding rule), which conforming us-sst providers cite as their rounding basis.",
+          "enum": ["half_up", "half_even", "truncation"],
+          "default": "half_up"
+        },
+        "granularity": {
+          "type": "string",
+          "description": "Rounding granularity the provider applies. UTCS recommends per-line-item, per-jurisdiction rounding before summation as the default; the provider declares the granularity it uses.",
+          "enum": ["per_line_per_jurisdiction", "per_line", "per_transaction"],
+          "default": "per_line_per_jurisdiction"
+        },
+        "jurisdiction_overrides_applied": {
+          "type": "boolean",
+          "description": "Whether the provider applies jurisdiction-mandated rounding methods that differ from the default (e.g., banker's rounding, truncation)."
+        }
+      },
+      "required": ["default_method", "granularity", "jurisdiction_overrides_applied"]
+    },
+    "conformance_profiles": {
+      "type": "array",
+      "description": "Named tax-standard conformance profiles this provider implements. A conformance profile is a regional or standards-body rule set (sourcing, jurisdiction code systems, document formats, exemption handling) the provider conforms to. This is a provider DECLARATION, not a per-call input: callers never select a profile in a request. The provider derives which profile applies to each transaction and annotates it on the Tax Result via the result-level 'conformance' field.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Conformance profile identifier.",
+            "examples": ["us-sst", "en16931", "peppol-bis-billing-3"]
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the profile the provider conforms to."
+          },
+          "specification_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Link to the profile specification."
+          }
+        },
+        "required": ["id"]
+      }
+    },
+    "certification": {
+      "type": "object",
+      "description": "Provider's UTCS certification status.",
+      "properties": {
+        "badges": {
+          "type": "array",
+          "description": "Certification badges held by this provider.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
+                  "core_compliance",
+                  "product_classification",
+                  "exemption_management",
+                  "compliance_documents",
+                  "cross_border_commerce",
+                  "filing_obligations"
+                ]
+              },
+              "tier": {
+                "type": "string",
+                "enum": ["core", "standard", "advanced"]
+              },
+              "certified_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Date the badge was certified."
+              },
+              "expires_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Date the certification expires."
+              }
+            },
+            "required": ["name", "tier", "certified_date"]
+          }
+        },
+        "registry_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the provider's entry in the UTCS public registry."
+        }
+      }
+    }
+  },
+  "required": [
+    "utcs_version",
+    "provider",
+    "capabilities",
+    "transports",
+    "authentication",
+    "input_profiles",
+    "rounding"
+  ],
+  "additionalProperties": false
+}

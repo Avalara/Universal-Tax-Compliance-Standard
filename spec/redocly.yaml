@@ -1,0 +1,18 @@
+# Redocly rules for spec/openapi/utcs-v1.yaml.
+# The server default is api.example.com on purpose (RFC 2606). The
+# no-server-example.com rule flags that host, so it is off.
+extends:
+  - minimal
+
+rules:
+  struct: error
+  no-unresolved-refs: error
+  operation-operationId: error
+  operation-operationId-unique: error
+  no-identical-paths: error
+  no-invalid-media-type-examples: error
+  no-invalid-schema-examples: error
+  # Conditional required (fee_basis if/then) is valid JSON Schema. This rule
+  # flags those members as undefined.
+  no-required-schema-properties-undefined: off
+  no-server-example.com: off

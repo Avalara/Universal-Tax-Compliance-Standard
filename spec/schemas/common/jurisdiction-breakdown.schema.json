@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://utcs.tax/schemas/common/jurisdiction-breakdown.schema.json",
+  "title": "UTCS Jurisdiction Breakdown",
+  "description": "A single taxing authority's levy on a line item. Part of the canonical Tax Result output.",
+  "type": "object",
+  "properties": {
+    "jurisdiction_type": {
+      "type": "string",
+      "description": "Type of taxing jurisdiction.",
+      "enum": ["country", "state", "province", "county", "city", "district", "special"]
+    },
+    "jurisdiction_code": {
+      "type": "string",
+      "description": "Standardized jurisdiction identifier. Interpreted according to jurisdiction_code_system."
+    },
+    "jurisdiction_code_system": {
+      "type": "string",
+      "description": "Code system that jurisdiction_code is drawn from, so the identifier is unambiguous across regions. UTCS ships no jurisdiction codes itself; the provider names the system it used. The us-sst conformance profile REQUIRES 'fips'.",
+      "enum": ["fips", "iso-3166-1", "iso-3166-2", "provider-defined"],
+      "default": "provider-defined"
+    },
+    "jurisdiction_name": {
+      "type": "string",
+      "description": "Human-readable jurisdiction name."
+    },
+    "tax_type": {
+      "type": "string",
+      "description": "Type of tax levied. Provider-derived OUTPUT determined from origin, destination, entity type, date, and nexus. Never supplied by the caller. Maps to the UBL cac:TaxScheme/cbc:ID (UNCL5153) when emitting e-invoices.",
+      "enum": ["sales_tax", "sellers_use", "consumer_use", "use_tax", "vat", "gst", "excise", "duty", "environmental_fee"]
+    },
+    "tax_category": {
+      "type": "string",
+      "description": "Taxability treatment of the levy, expressed as a UN/EDIFACT 5305 (UNCL5305) duty/tax/fee category code. Provider-derived OUTPUT. Maps directly to UBL cac:TaxCategory/cbc:ID for e-invoicing and expresses the same concept as an SST taxability treatment. S=standard rate, Z=zero rated, E=exempt, AE=VAT reverse charge, K=intra-community supply (EEA), G=free export item (tax not charged), O=outside scope of tax, L=Canary Islands indirect tax, M=Ceuta and Melilla tax, B=transferred VAT (Italy).",
+      "enum": ["S", "Z", "E", "AE", "K", "G", "O", "L", "M", "B"]
+    },
+    "fee_basis": {
+      "type": "string",
+      "description": "How this levy is computed, so a consumer can reconcile tax_amount without inferring a rate. 'ad_valorem' (default): tax_amount equals taxable_amount multiplied by rate. 'flat': a fixed statutory amount per transaction or delivery, independent of order value (for example, Colorado's retail delivery fee); rate does not apply. 'per_unit': a fixed amount per unit, where tax_amount equals unit_rate multiplied by units (for example, per-tire, per-battery, or per-container environmental fees).",
+      "enum": ["ad_valorem", "flat", "per_unit"],
+      "default": "ad_valorem"
+    },
+    "rate": {
+      "type": "string",
+      "description": "Tax rate applied as a decimal string (e.g., \"0.065\" for 6.5%). Applies to the ad_valorem fee basis and is omitted for flat and per_unit levies.",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "unit_rate": {
+      "type": "string",
+      "description": "Fee charged per unit, as a decimal string. Present for the per_unit fee basis, where tax_amount equals unit_rate multiplied by units.",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "units": {
+      "type": "string",
+      "description": "Count of units the per_unit fee applies to, as a decimal string (fractional units are allowed for weight- or volume-based fees). Present for the per_unit fee basis.",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "taxable_amount": {
+      "type": "string",
+      "description": "Amount subject to this jurisdiction's tax.",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "tax_amount": {
+      "type": "string",
+      "description": "Levy calculated by this jurisdiction. Its derivation depends on fee_basis: taxable_amount multiplied by rate for ad_valorem, the fixed statutory amount for flat, or unit_rate multiplied by units for per_unit.",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "rate_rule_id": {
+      "type": "string",
+      "description": "Provider's identifier for the specific rate rule applied. Enables audit tracing."
+    },
+    "exemption_applied": {
+      "oneOf": [
+        {
+          "type": "object",
+          "description": "Exemption that reduced tax for this jurisdiction.",
+          "properties": {
+            "certificate_id": {
+              "type": "string",
+              "description": "Identifier of the exemption certificate applied."
+            },
+            "exemption_reason": {
+              "type": "string",
+              "description": "Controlled reason the exemption was granted. Aligned to the SSTGB Uniform Sales and Use Tax Exemption/Resale Certificate (Form F0003) reason categories and extended for cross-border use. Conformance profiles MAY narrow this list.",
+              "enum": [
+                "resale",
+                "government",
+                "charitable_nonprofit",
+                "religious_educational",
+                "agricultural_production",
+                "industrial_production",
+                "direct_pay",
+                "direct_mail",
+                "foreign_diplomat",
+                "export",
+                "intra_community_supply",
+                "other"
+              ]
+            },
+            "exemption_type": {
+              "type": "string",
+              "description": "Optional provider-specific refinement of exemption_reason (free text). Present for finer detail beyond the controlled vocabulary."
+            }
+          },
+          "required": ["certificate_id", "exemption_reason"]
+        },
+        { "type": "null" }
+      ],
+      "description": "If an exemption reduced tax, includes certificate ID and exemption type. Null if no exemption applied."
+    }
+  },
+  "required": [
+    "jurisdiction_type",
+    "jurisdiction_code",
+    "jurisdiction_name",
+    "tax_type",
+    "taxable_amount",
+    "tax_amount",
+    "rate_rule_id"
+  ],
+  "allOf": [
+    {
+      "$comment": "rate is required for ad_valorem levies (the default when fee_basis is absent) and omitted for flat and per_unit.",
+      "if": { "properties": { "fee_basis": { "const": "ad_valorem" } } },
+      "then": { "required": ["rate"] }
+    },
+    {
+      "$comment": "per_unit levies carry the per-unit amount and unit count in place of a rate.",
+      "if": { "properties": { "fee_basis": { "const": "per_unit" } }, "required": ["fee_basis"] },
+      "then": { "required": ["unit_rate", "units"] }
+    }
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,49 @@
+{
+  "profile": "utcs-standard",
+  "document_type": "sale",
+  "document_code": "SO-100548",
+  "company_code": "AVA-RETAIL-US",
+  "transaction_date": "2026-07-15T10:30:00Z",
+  "currency_code": "USD",
+  "commit": false,
+  "entity_type": "b2c",
+  "customer": {
+    "customer_code": "CUST-CO-3390"
+  },
+  "addresses": {
+    "ship_from": {
+      "line1": "5000 Fox St",
+      "city": "Denver",
+      "region": "CO",
+      "postal_code": "80216",
+      "country": "US",
+      "location_code": "DC-CO-001"
+    },
+    "ship_to": {
+      "line1": "1701 Wynkoop St",
+      "line2": "Suite 200",
+      "city": "Denver",
+      "region": "CO",
+      "postal_code": "80202",
+      "country": "US"
+    }
+  },
+  "lines": [
+    {
+      "line_number": "1",
+      "quantity": 1,
+      "amount": "100.00",
+      "item_code": "WIDGET-BLUE",
+      "description": "Blue stainless steel widget",
+      "tax_code": "P0000000"
+    },
+    {
+      "line_number": "2",
+      "quantity": 1,
+      "amount": "0.00",
+      "item_code": "CO-RDF",
+      "description": "Colorado retail delivery fee",
+      "tax_code": "OF400000"
+    }
+  ]
+}

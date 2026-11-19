@@ -1,0 +1,47 @@
+{
+  "utcs_version": "1.0",
+  "provider": {
+    "id": "example-tax",
+    "name": "Example Tax Provider"
+  },
+  "capabilities": [
+    {
+      "name": "tax-determination",
+      "version": "1.0",
+      "tier": "core",
+      "endpoints": {
+        "determine": { "method": "POST", "path": "/tax/determine" },
+        "void": { "method": "POST", "path": "/tax/void" }
+      }
+    },
+    {
+      "name": "jurisdiction-resolution",
+      "version": "1.0",
+      "tier": "core",
+      "endpoints": {
+        "resolve": { "method": "POST", "path": "/jurisdictions/resolve" }
+      }
+    },
+    {
+      "name": "product-classification",
+      "version": "1.0",
+      "tier": "standard",
+      "endpoints": {
+        "classify": { "method": "POST", "path": "/classify" }
+      }
+    }
+  ],
+  "transports": [
+    { "type": "rest", "base_url": "https://api.example.com/utcs/v1" },
+    { "type": "a2a", "base_url": "https://agents.example.com" }
+  ],
+  "authentication": [
+    { "method": "bearer_token" }
+  ],
+  "input_profiles": ["utcs-standard"],
+  "rounding": {
+    "default_method": "half_up",
+    "granularity": "per_line_per_jurisdiction",
+    "jurisdiction_overrides_applied": false
+  }
+}

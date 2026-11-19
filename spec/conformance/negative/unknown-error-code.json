@@ -1,0 +1,8 @@
+{
+  "error": {
+    "code": "UTCS-9999",
+    "category": "input",
+    "message": "This code is not in the registry.",
+    "recovery": { "action": "not_recoverable" }
+  }
+}

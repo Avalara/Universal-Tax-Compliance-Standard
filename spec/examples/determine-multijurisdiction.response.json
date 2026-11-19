@@ -1,0 +1,185 @@
+{
+  "result_id": "res_3b81d0c92f",
+  "document_code": "INV-2026-0098",
+  "status": "committed",
+  "total_tax": "28.50",
+  "total_taxable": "300.00",
+  "total_exempt": "0.00",
+  "total_non_taxable": "0.00",
+  "total_amount": "300.00",
+  "currency_code": "USD",
+  "lines": [
+    {
+      "line_number": "1",
+      "tax_amount": "9.50",
+      "taxable_amount": "100.00",
+      "exempt_amount": "0.00",
+      "non_taxable_amount": "0.00",
+      "tax_code": "P0000000",
+      "tax_code_description": "Tangible personal property",
+      "jurisdictions": [
+        {
+          "jurisdiction_type": "state",
+          "jurisdiction_code": "06",
+          "jurisdiction_code_system": "fips",
+          "jurisdiction_name": "CALIFORNIA",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "rate": "0.06",
+          "taxable_amount": "100.00",
+          "tax_amount": "6.00",
+          "rate_rule_id": "CA-STATE-0600",
+          "exemption_applied": null
+        },
+        {
+          "jurisdiction_type": "county",
+          "jurisdiction_code": "06037",
+          "jurisdiction_code_system": "fips",
+          "jurisdiction_name": "LOS ANGELES COUNTY",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "rate": "0.0025",
+          "taxable_amount": "100.00",
+          "tax_amount": "0.25",
+          "rate_rule_id": "CA-LAC-0025",
+          "exemption_applied": null
+        },
+        {
+          "jurisdiction_type": "district",
+          "jurisdiction_code": "CA-LAC-DISTRICT",
+          "jurisdiction_code_system": "provider-defined",
+          "jurisdiction_name": "LOS ANGELES COUNTY DISTRICT",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "rate": "0.01",
+          "taxable_amount": "100.00",
+          "tax_amount": "1.00",
+          "rate_rule_id": "CA-LACD-0100",
+          "exemption_applied": null
+        },
+        {
+          "jurisdiction_type": "special",
+          "jurisdiction_code": "CA-LACMTA",
+          "jurisdiction_code_system": "provider-defined",
+          "jurisdiction_name": "LA METRO TRANSPORTATION AUTHORITY",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "rate": "0.0225",
+          "taxable_amount": "100.00",
+          "tax_amount": "2.25",
+          "rate_rule_id": "CA-LACMTA-0225",
+          "exemption_applied": null
+        }
+      ]
+    },
+    {
+      "line_number": "2",
+      "tax_amount": "19.00",
+      "taxable_amount": "200.00",
+      "exempt_amount": "0.00",
+      "non_taxable_amount": "0.00",
+      "tax_code": "P0000000",
+      "tax_code_description": "Tangible personal property",
+      "jurisdictions": [
+        {
+          "jurisdiction_type": "state",
+          "jurisdiction_code": "06",
+          "jurisdiction_code_system": "fips",
+          "jurisdiction_name": "CALIFORNIA",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "rate": "0.06",
+          "taxable_amount": "200.00",
+          "tax_amount": "12.00",
+          "rate_rule_id": "CA-STATE-0600",
+          "exemption_applied": null
+        },
+        {
+          "jurisdiction_type": "county",
+          "jurisdiction_code": "06037",
+          "jurisdiction_code_system": "fips",
+          "jurisdiction_name": "LOS ANGELES COUNTY",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "rate": "0.0025",
+          "taxable_amount": "200.00",
+          "tax_amount": "0.50",
+          "rate_rule_id": "CA-LAC-0025",
+          "exemption_applied": null
+        },
+        {
+          "jurisdiction_type": "district",
+          "jurisdiction_code": "CA-LAC-DISTRICT",
+          "jurisdiction_code_system": "provider-defined",
+          "jurisdiction_name": "LOS ANGELES COUNTY DISTRICT",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "rate": "0.01",
+          "taxable_amount": "200.00",
+          "tax_amount": "2.00",
+          "rate_rule_id": "CA-LACD-0100",
+          "exemption_applied": null
+        },
+        {
+          "jurisdiction_type": "special",
+          "jurisdiction_code": "CA-LACMTA",
+          "jurisdiction_code_system": "provider-defined",
+          "jurisdiction_name": "LA METRO TRANSPORTATION AUTHORITY",
+          "tax_type": "sales_tax",
+          "tax_category": "S",
+          "rate": "0.0225",
+          "taxable_amount": "200.00",
+          "tax_amount": "4.50",
+          "rate_rule_id": "CA-LACMTA-0225",
+          "exemption_applied": null
+        }
+      ]
+    }
+  ],
+  "jurisdictions": [
+    {
+      "jurisdiction_type": "state",
+      "jurisdiction_code": "06",
+      "jurisdiction_code_system": "fips",
+      "jurisdiction_name": "CALIFORNIA",
+      "tax_type": "sales_tax",
+      "taxable_amount": "300.00",
+      "tax_amount": "18.00"
+    },
+    {
+      "jurisdiction_type": "county",
+      "jurisdiction_code": "06037",
+      "jurisdiction_code_system": "fips",
+      "jurisdiction_name": "LOS ANGELES COUNTY",
+      "tax_type": "sales_tax",
+      "taxable_amount": "300.00",
+      "tax_amount": "0.75"
+    },
+    {
+      "jurisdiction_type": "district",
+      "jurisdiction_code": "CA-LAC-DISTRICT",
+      "jurisdiction_code_system": "provider-defined",
+      "jurisdiction_name": "LOS ANGELES COUNTY DISTRICT",
+      "tax_type": "sales_tax",
+      "taxable_amount": "300.00",
+      "tax_amount": "3.00"
+    },
+    {
+      "jurisdiction_type": "special",
+      "jurisdiction_code": "CA-LACMTA",
+      "jurisdiction_code_system": "provider-defined",
+      "jurisdiction_name": "LA METRO TRANSPORTATION AUTHORITY",
+      "tax_type": "sales_tax",
+      "taxable_amount": "300.00",
+      "tax_amount": "6.75"
+    }
+  ],
+  "attestation": {
+    "provider_id": "example-tax",
+    "provider_name": "Example Tax Provider",
+    "content_version": "2026.03.1",
+    "calculation_timestamp": "2026-03-15T09:05:01Z",
+    "engine_version": "utcs-engine/4.2.0",
+    "signature": "eyJhbGciOiJFUzI1NiJ9.UTCS-RESULT.MEUCIQD2pZ0nq1f6"
+  }
+}

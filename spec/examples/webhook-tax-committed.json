@@ -1,0 +1,45 @@
+{
+  "event_type": "utcs.tax.committed",
+  "timestamp": "2026-04-18T09:12:00Z",
+  "payload": {
+    "result_id": "res_5d81c0a4f2",
+    "document_code": "SO-100450",
+    "status": "committed",
+    "total_tax": "8.25",
+    "total_taxable": "100.00",
+    "total_exempt": "0.00",
+    "total_non_taxable": "0.00",
+    "total_amount": "100.00",
+    "currency_code": "USD",
+    "lines": [
+      {
+        "line_number": "1",
+        "tax_amount": "8.25",
+        "taxable_amount": "100.00",
+        "exempt_amount": "0.00",
+        "non_taxable_amount": "0.00",
+        "tax_code": "P0000000",
+        "jurisdictions": [
+          {
+            "jurisdiction_type": "state",
+            "jurisdiction_code": "48",
+            "jurisdiction_name": "TEXAS",
+            "tax_type": "sales_tax",
+            "rate": "0.0625",
+            "taxable_amount": "100.00",
+            "tax_amount": "6.25",
+            "rate_rule_id": "TX-STATE-0625"
+          }
+        ]
+      }
+    ],
+    "attestation": {
+      "provider_id": "example-tax",
+      "provider_name": "Example Tax Provider",
+      "content_version": "2026.03.1",
+      "calculation_timestamp": "2026-04-18T09:12:00Z",
+      "engine_version": "utcs-engine/4.2.0"
+    }
+  },
+  "signature": "example-signature"
+}

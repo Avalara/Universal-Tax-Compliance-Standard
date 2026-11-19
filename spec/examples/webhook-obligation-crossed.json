@@ -1,0 +1,12 @@
+{
+  "event_type": "utcs.obligation.threshold_crossed",
+  "timestamp": "2026-04-18T09:12:00Z",
+  "payload": {
+    "jurisdiction_code": "US-CO",
+    "jurisdiction_name": "COLORADO",
+    "nexus_type": "economic",
+    "filing_frequency": "monthly",
+    "effective_date": "2026-05-01"
+  },
+  "signature": "example-signature"
+}

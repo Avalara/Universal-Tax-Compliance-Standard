@@ -1,0 +1,10 @@
+{
+  "event_type": "utcs.document.generated",
+  "timestamp": "2026-04-18T09:12:00Z",
+  "payload": {
+    "document_id": "doc_100450",
+    "document_code": "SO-100450",
+    "result_id": "res_5d81c0a4f2"
+  },
+  "signature": "example-signature"
+}
