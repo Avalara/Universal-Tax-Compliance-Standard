@@ -1,0 +1,28 @@
+{
+  "document_type": "return",
+  "transaction_date": "2026-04-02T15:00:00Z",
+  "currency_code": "USD",
+  "commit": false,
+  "entity_type": "b2c",
+  "addresses": {
+    "ship_from": {
+      "line1": "1 Main St",
+      "city": "Austin",
+      "postal_code": "78701",
+      "country": "US"
+    },
+    "ship_to": {
+      "line1": "2 Main St",
+      "city": "Austin",
+      "postal_code": "78702",
+      "country": "US"
+    }
+  },
+  "lines": [
+    {
+      "line_number": "1",
+      "quantity": 1,
+      "amount": "49.99"
+    }
+  ]
+}

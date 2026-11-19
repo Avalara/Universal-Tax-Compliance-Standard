@@ -1,0 +1,37 @@
+{
+  "profile": "utcs-standard",
+  "document_type": "return",
+  "document_code": "RTN-100432",
+  "reference_code": "SO-100432",
+  "transaction_date": "2026-04-02T15:00:00Z",
+  "currency_code": "USD",
+  "commit": false,
+  "entity_type": "b2c",
+  "addresses": {
+    "ship_from": {
+      "line1": "512 S Mangum St",
+      "city": "Durham",
+      "region": "NC",
+      "postal_code": "27701",
+      "country": "US",
+      "location_code": "STORE-NC-014"
+    },
+    "ship_to": {
+      "line1": "98 San Jacinto Blvd",
+      "city": "Austin",
+      "region": "TX",
+      "postal_code": "78701",
+      "country": "US"
+    }
+  },
+  "lines": [
+    {
+      "line_number": "1",
+      "quantity": -1,
+      "amount": "-100.00",
+      "item_code": "WIDGET-BLUE",
+      "description": "Blue stainless steel widget",
+      "tax_code": "P0000000"
+    }
+  ]
+}

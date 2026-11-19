@@ -2,7 +2,7 @@
 
 **Envelope version:** 1.0
 **Status:** Draft
-**Date:** 18 November 2026
+**Date:** 19 November 2026
 **Maintainers:** UTCS maintainers
 **License:** Apache License 2.0
 
@@ -91,9 +91,21 @@ A provider MUST enforce these constraints:
 
 `document_type` includes `void`. A void is a tax-determination request with `document_type` of `void`, sent to `POST /tax/determine`. There is no `/tax/void` operation. When the document to void cannot be found, the provider MUST return `UTCS-6002`.
 
+A line `quantity` MAY be negative only when `document_type` is `return`. On a return, every line `amount` MUST be negative: `amount` is the signed tax base. A positive `quantity` on a return is the count of units returned and is paired with that negative amount. A negative `quantity` MUST be paired with a negative `amount`. A provider MUST reject any other combination with `UTCS-3004`: a negative `quantity` on a document that is not a return, or a return line whose `amount` is not negative. An exchange is a return document and a separate sale document.
+
+When `document_type` is `return` and `reference_code` is the original transaction's `document_code`, the provider MUST reverse the tax recorded on that original for the returned portion. It MUST NOT recalculate that tax at current rates. A return that omits `reference_code` is a new determination of the negative line amounts. When `reference_code` names a document the provider cannot find, the provider MUST return `UTCS-6002`. On any other `document_type`, `reference_code` is an audit cross-reference and MUST NOT change the calculation.
+
+When a determination sets `customer.exemption_certificate_id` or a line `exemption_certificate_id`, the provider MUST apply that certificate or MUST reject the request with `UTCS-5001`, `UTCS-5002`, `UTCS-5003`, or `UTCS-5004`. The provider MUST NOT ignore the identifier and calculate tax as if it had been omitted.
+
+`location_code` on an address is the seller's outlet code for local reporting. It does not change the address used to source the tax. When more than one address carries a `location_code`, the governing code is the one on the seller's origin: the line `addresses.ship_from` when that line sets it, otherwise the transaction `ship_from`, otherwise `single_location`. A `location_code` on `ship_to`, `bill_to`, or any other address does not select the reporting outlet.
+
+`addresses.bill_to` is the customer's billing address. Sourcing rules that look at bill-to use it, including California SB 122 (effective 1 January 2027), which sources SaaS and prewritten software by billing address first. `bill_to` does not satisfy `ship_to`. A caller that has only a billing address MUST send that same address as both `bill_to` and `ship_to`. The provider MUST NOT copy `bill_to` into `ship_to`.
+
 ### 3.2 Tax Result
 
 `schemas/tax-result.schema.json` is the canonical output. A provider MUST return this structure for a successful determination. Jurisdiction, tax type, tax category, and `fee_basis` are provider outputs. The caller does not select them.
+
+`document_code` on the request is the caller's key when the caller sends one. It is optional. A caller SHOULD send it when `commit` is true. `UTCS-6001` rejects a repeated commit of that code, and without the caller's key a retry is a new document. When the caller omits it, the provider MAY generate a `document_code`. The Tax Result always includes `document_code`: the caller's value when one was sent, otherwise the generated value. It is not defined as an echo of a field the request may have omitted. `result_id` is the provider's own key for the result and MAY be the same value as `document_code`. `document_id` is not a member of the Tax Result. It exists only on a compliance document.
 
 `fee_basis` has three values:
 
@@ -113,9 +125,13 @@ These schemas are normative for their operations:
 | `POST /tax-codes/classify` | `schemas/classification-request.schema.json` | `schemas/classification-result.schema.json` |
 | `POST /exemptions/validate` | `schemas/exemption-validation-request.schema.json` | `schemas/exemption-validation-result.schema.json` |
 
+`POST /exemptions/validate` reports whether a certificate on file is valid for a jurisdiction, product, and date. A successful validation exempts nothing. Exemption takes effect only when a determination applies the certificate under section 3.1.
+
 ### 3.4 Accuracy over availability
 
 If a provider cannot determine tax accurately, it MUST return an error from the registry in section 4. It MUST NOT return an approximate rate, a default rate, or a guessed amount in place of that error.
+
+`messages[]` on a successful Tax Result carries notices about the calculation. It MUST NOT carry an estimated rate, an approximate rate, or a guessed amount. Those are errors under this section, not warnings. "Nexus not established" is a warning: where the seller has no nexus, zero tax is the accurate result, and the provider returns that result with the warning. An address correction is a warning. A defaulted tax code MAY be a warning when the provider applied a code it can stand behind.
 
 ### 3.5 Attestation
 
@@ -183,6 +199,8 @@ Operation paths below are relative to the REST base URL. That base URL includes 
 | GET | `/obligations` | `filing-obligations` |
 
 There is no `/tax/void` path and no `/classify` path.
+
+`document_id` identifies a compliance document and appears on `GET /documents/{document_id}`, on the document body, and on `utcs.document.generated`. `document_code` and `result_id` are defined in section 3.2. The three identifiers have different roles. `document_code` and `result_id` MAY be the same value. `document_id` exists only once a compliance document exists.
 
 REST requirements:
 

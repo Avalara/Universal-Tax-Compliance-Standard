@@ -11,12 +11,12 @@
     },
     "quantity": {
       "type": "number",
-      "description": "Quantity of the item. Decimal permitted for measured goods. MUST be non-zero. Negative quantities permitted only when document_type is 'return'.",
+      "description": "Quantity of the item. Decimal permitted for measured goods. MUST be non-zero. A negative quantity is permitted only when document_type is return, and on that line amount MUST be negative as well. A positive quantity on a return is the count of units returned.",
       "not": { "const": 0 }
     },
     "amount": {
       "type": "string",
-      "description": "Total monetary amount for this line as a decimal string (e.g., \"49.99\"). MUST NOT be a bare numeric type.",
+      "description": "Total monetary amount for this line as a decimal string (e.g., \"49.99\"). MUST NOT be a bare numeric type. On a return this is the signed tax base and MUST be negative. When quantity is negative, amount MUST be negative.",
       "pattern": "^-?\\d+(\\.\\d+)?$"
     },
     "item_code": {
@@ -56,7 +56,7 @@
     },
     "exemption_certificate_id": {
       "type": "string",
-      "description": "Per-line exemption certificate identifier, overriding the customer-level exemption_certificate_id for this line. Use when only specific lines are covered by a certificate."
+      "description": "Per-line exemption certificate identifier, overriding the customer-level exemption_certificate_id for this line. Use when only specific lines are covered by a certificate. The provider MUST apply it or reject the request with UTCS-5001, UTCS-5002, UTCS-5003, or UTCS-5004. It MUST NOT be ignored. A prior successful exemption validation does not apply it."
     },
     "addresses": {
       "type": "object",
@@ -100,5 +100,18 @@
     }
   },
   "required": ["line_number", "quantity", "amount"],
+  "allOf": [
+    {
+      "if": {
+        "properties": { "quantity": { "exclusiveMaximum": 0 } },
+        "required": ["quantity"]
+      },
+      "then": {
+        "properties": {
+          "amount": { "pattern": "^-\\d+(\\.\\d+)?$" }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://utcs.tax/schemas/exemption-validation-result.schema.json",
   "title": "Exemption Validation Result",
-  "description": "Response body for POST /exemptions/validate.",
+  "description": "Response body for POST /exemptions/validate. Validity is a report about the certificate. It does not exempt a later determination.",
   "type": "object",
   "properties": {
     "certificate_id": { "type": "string" },

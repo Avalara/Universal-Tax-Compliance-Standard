@@ -50,7 +50,7 @@
     },
     "location_code": {
       "type": "string",
-      "description": "Identifier of a registered business location (outlet, store, warehouse) at this address. Optional. Used where a jurisdiction requires outlet-level attribution for local reporting; the provider maps it to the registered location it has on file."
+      "description": "Seller outlet code for local reporting at this address. Optional. It does not change the address used to source the tax. When more than one address carries a location_code, the governing code is the seller origin: the line addresses.ship_from when the line sets it, otherwise the transaction ship_from, otherwise single_location. A location_code on ship_to, bill_to, or any other address does not select the reporting outlet."
     }
   },
   "required": ["country"],

@@ -210,6 +210,7 @@ const positive = [
   ['determine-crossborder.response.json', 'tax-result.schema.json'],
   ['determine-retail-delivery-fee.request.json', 'transaction-context.schema.json'],
   ['determine-retail-delivery-fee.response.json', 'tax-result.schema.json'],
+  ['determine-return.request.json', 'transaction-context.schema.json'],
   ['error-insufficient-address.response.json', 'common/error-response.schema.json'],
   ['discovery-manifest.example.json', 'discovery-manifest.schema.json'],
   ['resolve-seattle.request.json', 'jurisdiction-resolution-request.schema.json'],
@@ -226,6 +227,8 @@ const positive = [
 
 const negativeSchemas = [
   ['empty-lines.request.json', 'transaction-context.schema.json'],
+  ['return-nonnegative-amount.request.json', 'transaction-context.schema.json'],
+  ['sale-negative-quantity.request.json', 'transaction-context.schema.json'],
   ['unknown-error-code.json', 'common/error-response.schema.json'],
   ['classify-no-products.json', 'classification-request.schema.json'],
   ['webhook-missing-signature.json', 'webhooks/tax-committed.schema.json']

@@ -2,7 +2,7 @@
 
 The specification is provider-neutral. Worked examples use the provider id `example-tax` and hosts under `example.com`, which is reserved by RFC 2606. Those examples are not a live service.
 
-Avalara maintains an informative implementation of the UCP binding. It is not part of the published specification:
+Avalara maintains an informative implementation of the UCP binding. It is not part of this repository:
 
 - `src/bindings/ucp/` maps checkout tax calls onto a UTCS Transaction Context and back.
 - `src/examples/ucp/` is a mock determiner.

@@ -2,7 +2,7 @@
 
 Envelope version **1.0** is **Draft**. A Draft artifact is normative for implementers and may still change in a compatible or incompatible way before it is marked Stable. An Experimental artifact is published so it can be tried; conforming to the envelope does not require implementing it. Nothing is Stable while the open questions in [ROADMAP.md](ROADMAP.md) are unresolved.
 
-Date of this table: 18 November 2026.
+Date of this table: 19 November 2026.
 
 | Artifact | Status | Notes |
 |----------|--------|-------|

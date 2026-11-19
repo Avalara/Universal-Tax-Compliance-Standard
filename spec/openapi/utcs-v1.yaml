@@ -150,6 +150,37 @@ paths:
                       item_code: "SKU-HEADPHONES-BT"
                       tax_code: "P0000000"
                       description: "Wireless Bluetooth headphones (bulk)"
+              return_of_original:
+                summary: Return that reverses the original tax
+                value:
+                  document_type: return
+                  document_code: "RTN-100432"
+                  reference_code: "SO-100432"
+                  transaction_date: "2026-04-02T15:00:00Z"
+                  currency_code: USD
+                  commit: false
+                  entity_type: b2c
+                  addresses:
+                    ship_from:
+                      line1: "512 S Mangum St"
+                      city: "Durham"
+                      region: "NC"
+                      postal_code: "27701"
+                      country: "US"
+                      location_code: "STORE-NC-014"
+                    ship_to:
+                      line1: "98 San Jacinto Blvd"
+                      city: "Austin"
+                      region: "TX"
+                      postal_code: "78701"
+                      country: "US"
+                  lines:
+                    - line_number: "1"
+                      quantity: -1
+                      amount: "-100.00"
+                      item_code: "WIDGET-BLUE"
+                      tax_code: "P0000000"
+                      description: "Blue stainless steel widget"
       responses:
         "200":
           description: Tax calculated successfully
@@ -344,6 +375,11 @@ paths:
         Validate exemption certificates, resale certificates, and other tax-exempt
         credentials in real-time. Supports programmatic exchange of exemption credentials
         for B2B agent-to-agent transactions without human intervention.
+
+        A successful validation exempts nothing. Exemption takes effect only when a
+        later determination references the certificate and the provider applies it.
+        A referenced certificate that cannot be applied fails that determination
+        with UTCS-5xxx. It is never silently ignored.
 
         Depends on: tax-determination
       requestBody:
@@ -813,7 +849,7 @@ components:
           maximum: 180
         location_code:
           type: string
-          description: Identifier of a registered business location (outlet, store, warehouse) at this address. Used where a jurisdiction requires outlet-level attribution for local reporting.
+          description: Seller outlet code for local reporting at this address. It does not change the address used to source the tax. When more than one address carries a location_code, the governing code is the seller origin (line ship_from, else transaction ship_from, else single_location). A location_code on ship_to, bill_to, or any other address does not select the reporting outlet.
       required: [country]
       oneOf:
         - required: [line1, city, postal_code, country]
@@ -830,10 +866,11 @@ components:
         quantity:
           type: number
           not: { const: 0 }
+          description: Quantity of the item. MUST be non-zero. A negative quantity is permitted only when document_type is return, and on that line amount MUST be negative. A positive quantity on a return is the count of units returned.
         amount:
           type: string
           pattern: "^-?\\d+(\\.\\d+)?$"
-          description: "Decimal string (e.g., \"49.99\")"
+          description: "Decimal string (e.g., \"49.99\"). On a return this is the signed tax base and MUST be negative. When quantity is negative, amount MUST be negative."
         item_code:
           type: string
         description:
@@ -857,7 +894,7 @@ components:
           enum: [resale, government, charitable_nonprofit, religious_educational, agricultural_production, industrial_production, direct_pay, direct_mail, foreign_diplomat, export, intra_community_supply, other]
         exemption_certificate_id:
           type: string
-          description: Per-line exemption certificate identifier, overriding the customer-level value for this line.
+          description: Per-line exemption certificate identifier, overriding the customer-level value for this line. The provider applies it or rejects the request with a UTCS-5xxx error. It is never ignored. Validation alone does not apply it.
         addresses:
           type: object
           description: Per-line address override for split-origin or drop-ship fulfillment.
@@ -882,6 +919,17 @@ components:
           type: object
           additionalProperties: true
       required: [line_number, quantity, amount]
+      allOf:
+        - if:
+            properties:
+              quantity:
+                exclusiveMaximum: 0
+            required: [quantity]
+          then:
+            unevaluatedProperties: true
+            properties:
+              amount:
+                pattern: "^-\\d+(\\.\\d+)?$"
 
     JurisdictionBreakdown:
       type: object
@@ -1084,6 +1132,7 @@ components:
           enum: [sale, return, purchase_order, inventory_transfer, reverse_charge, customs, void]
         document_code:
           type: string
+          description: The caller's key for this transaction when the caller sends one. Optional. A caller SHOULD send it when commit is true, because UTCS-6001 rejects a repeated commit of that code and without it a retry is a new document. When omitted, the provider may generate a document_code. The Tax Result always returns one, the caller's value if sent, otherwise the generated value.
         company_code:
           type: string
           description: Identifier of the selling entity the transaction belongs to. Routes to the correct registered entity (nexus, registration, reporting). Distinct from business_identification_no.
@@ -1117,6 +1166,7 @@ components:
                 required: [type, value]
             exemption_certificate_id:
               type: string
+              description: Reference to an exemption certificate on file. The provider applies it or rejects the request with UTCS-5001, UTCS-5002, UTCS-5003, or UTCS-5004. It is never ignored. A prior successful validation does not apply it.
             entity_use_code:
               type: string
               description: Entity/use-based exemption reason asserting the buyer is exempt by status or intended use, independent of a certificate. Same vocabulary as the result exemption_reason.
@@ -1140,6 +1190,7 @@ components:
               $ref: "#/components/schemas/Address"
             bill_to:
               $ref: "#/components/schemas/Address"
+              description: Customer's billing address. Used where sourcing looks at bill-to, including California SB 122 (effective 1 January 2027), which sources SaaS and prewritten software by billing address first. Does not satisfy ship_to. A caller with only a billing address sends that same address as both bill_to and ship_to.
           oneOf:
             - required: [ship_from, ship_to]
             - required: [single_location]
@@ -1168,7 +1219,7 @@ components:
           description: The selling entity's VAT/GST tax registration number. For routing to the selling entity, use company_code.
         reference_code:
           type: string
-          description: Optional reference to a related document or external system. For a return or adjustment, set this to the original transaction's document_code.
+          description: Optional reference to a related document or external system. When document_type is return and this is the original transaction's document_code, the provider reverses the original tax for the returned portion and does not recalculate it at current rates. If that document cannot be found, the provider returns UTCS-6002. On any other document type this is an audit cross-reference and does not change the calculation.
         purchase_order_number:
           type: string
           description: Buyer's purchase order number. Optional; does not affect tax determination.
@@ -1201,6 +1252,36 @@ components:
           type: object
           additionalProperties: true
       required: [document_type, transaction_date, currency_code, commit, entity_type, addresses, lines]
+      allOf:
+        - if:
+            properties:
+              document_type:
+                const: return
+            required: [document_type]
+          then:
+            unevaluatedProperties: true
+            properties:
+              lines:
+                items:
+                  unevaluatedProperties: true
+                  properties:
+                    amount:
+                      pattern: "^-\\d+(\\.\\d+)?$"
+        - if:
+            not:
+              properties:
+                document_type:
+                  const: return
+              required: [document_type]
+          then:
+            unevaluatedProperties: true
+            properties:
+              lines:
+                items:
+                  unevaluatedProperties: true
+                  properties:
+                    quantity:
+                      exclusiveMinimum: 0
 
     TaxResult:
       type: object
@@ -1208,8 +1289,10 @@ components:
       properties:
         result_id:
           type: string
+          description: The provider's own key for this result. May equal document_code. Distinct from document_id, which exists only on a compliance document.
         document_code:
           type: string
+          description: The transaction's document key. The caller's document_code when the request included one; otherwise a value the provider generated. Always present. May equal result_id. Not a compliance-document identifier.
         status:
           type: string
           enum: [calculated, committed, voided, adjusted]
@@ -1316,7 +1399,7 @@ components:
             required: [id]
         messages:
           type: array
-          description: Informational, warning, and error notices raised during calculation (address corrected, tax code defaulted, nexus not established). Advisory output; callers SHOULD surface warnings.
+          description: Informational, warning, and error notices raised during calculation (address corrected, tax code defaulted, nexus not established). Nexus not established is a warning because zero tax is the accurate result. An estimated or approximate rate is not a notice; that case is an error. Advisory output; callers SHOULD surface warnings.
           items:
             type: object
             properties:
@@ -1380,10 +1463,13 @@ components:
       properties:
         document_id:
           type: string
+          description: Identifier of this compliance document. Exists only on a compliance document. Not a member of the Tax Result.
         document_code:
           type: string
+          description: The transaction's document key, as defined on the Tax Result. The caller's key when they sent one; otherwise provider-generated.
         result_id:
           type: string
+          description: The provider's key for the Tax Result this document records. May equal document_code.
         created_at:
           type: string
           format: date-time

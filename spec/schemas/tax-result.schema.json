@@ -7,11 +7,11 @@
   "properties": {
     "result_id": {
       "type": "string",
-      "description": "Unique identifier for this result. Provider-generated."
+      "description": "The provider's own key for this result. MAY equal document_code. Distinct from document_id, which exists only on a compliance document."
     },
     "document_code": {
       "type": "string",
-      "description": "Echo of the input document_code."
+      "description": "The transaction's document key. The caller's document_code when the request included one; otherwise a value the provider generated because the caller omitted it. Always present. MAY equal result_id. Not a compliance-document identifier."
     },
     "status": {
       "type": "string",
@@ -203,7 +203,7 @@
     },
     "messages": {
       "type": "array",
-      "description": "Informational, warning, and error notices the provider raised while calculating (e.g., an address was corrected, a tax code was defaulted, nexus was not established). Advisory OUTPUT; the caller SHOULD surface warnings.",
+      "description": "Informational, warning, and error notices the provider raised while calculating (for example, an address was corrected, a tax code was defaulted, or nexus was not established). Nexus not established is a warning because zero tax is the accurate result. An estimated or approximate rate is not a notice; that case is an error. Advisory OUTPUT; the caller SHOULD surface warnings.",
       "items": {
         "type": "object",
         "properties": {

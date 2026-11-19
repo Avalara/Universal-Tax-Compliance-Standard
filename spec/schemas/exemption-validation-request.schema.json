@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://utcs.tax/schemas/exemption-validation-request.schema.json",
   "title": "Exemption Validation Request",
-  "description": "Request body for POST /exemptions/validate. Validates an exemption credential already on file with the provider. Failure uses UTCS-5xxx and MUST NOT be reported as a successful zero-tax determination.",
+  "description": "Request body for POST /exemptions/validate. Validates an exemption credential already on file with the provider. Failure uses UTCS-5xxx and MUST NOT be reported as a successful zero-tax determination. A successful validation exempts nothing; exemption takes effect only when a determination applies the certificate.",
   "type": "object",
   "properties": {
     "certificate_id": {

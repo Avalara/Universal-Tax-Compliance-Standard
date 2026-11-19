@@ -96,7 +96,7 @@ US sales and use tax distinguishes seller-collected and buyer-accrued obligation
 
 SST publishes the Uniform Sales and Use Tax Certificate of Exemption (SSTGB Form F0003). Under `us-sst`:
 
-- A claimed exemption MUST carry the certificate identifier through the input (`customer.exemption_certificate_id` or a per-line exemption claim).
+- A claimed exemption MUST carry the certificate identifier through the input (`customer.exemption_certificate_id` or a per-line exemption claim). The provider MUST apply that certificate or reject the determination with `UTCS-5xxx`. A successful `POST /exemptions/validate` exempts nothing by itself.
 - An applied exemption MUST report `exemption_reason` on the jurisdiction breakdown using a value drawn from the controlled vocabulary in [`../schemas/common/jurisdiction-breakdown.schema.json`](../schemas/common/jurisdiction-breakdown.schema.json).
 
 The controlled `exemption_reason` values align to the F0003 reason categories:

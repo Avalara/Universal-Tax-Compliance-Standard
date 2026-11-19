@@ -2,6 +2,8 @@
 # A change that makes one of them pass is a validator bug, not a spec fix.
 
 - `empty-lines.request.json` — transaction context with an empty `lines` array.
+- `return-nonnegative-amount.request.json` — a return whose line amount is not negative.
+- `sale-negative-quantity.request.json` — a sale line with a negative quantity.
 - `unknown-error-code.json` — error code outside the registry.
 - `classify-no-products.json` — classification request with no products.
 - `webhook-missing-signature.json` — committed-tax webhook without `signature`.

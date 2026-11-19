@@ -17,7 +17,7 @@
     },
     "document_code": {
       "type": "string",
-      "description": "Unique identifier in the caller's system. Used for idempotency and reconciliation. RECOMMENDED for all requests, REQUIRED for committed transactions."
+      "description": "The caller's key for this transaction when the caller sends one. Optional. A caller SHOULD send it when commit is true: UTCS-6001 rejects a repeated commit of that code, and without it a retry is a new document. When the caller omits it, the provider MAY generate a document_code. The Tax Result always returns one: the caller's value if sent, otherwise the generated value. Used for idempotency and reconciliation."
     },
     "company_code": {
       "type": "string",
@@ -76,7 +76,7 @@
         },
         "exemption_certificate_id": {
           "type": "string",
-          "description": "Reference to an exemption certificate on file with the provider."
+          "description": "Reference to an exemption certificate on file with the provider. The provider MUST apply it or reject the request with UTCS-5001, UTCS-5002, UTCS-5003, or UTCS-5004. It MUST NOT be ignored. A prior successful exemption validation does not apply it."
         },
         "entity_use_code": {
           "type": "string",
@@ -119,7 +119,7 @@
         },
         "bill_to": {
           "$ref": "common/address.schema.json",
-          "description": "Billing address. Required for India GST scenarios."
+          "description": "Customer's billing address. Sourcing rules that look at bill-to use this address, including California SB 122 (effective 1 January 2027), which sources SaaS and prewritten software by billing address first. bill_to does not satisfy ship_to. A caller that has only a billing address sends that same address as both bill_to and ship_to. The provider does not copy bill_to into ship_to."
         }
       },
       "oneOf": [
@@ -171,7 +171,7 @@
     },
     "reference_code": {
       "type": "string",
-      "description": "Optional reference to a related document or external system. For a return or adjustment, set this to the original transaction's document_code so the provider can reverse the original tax. Also carries general cross-references for audit."
+      "description": "Optional reference to a related document or external system. When document_type is return and this is the original transaction's document_code, the provider MUST reverse the original tax for the returned portion and MUST NOT recalculate it at current rates. When that document cannot be found, the provider returns UTCS-6002. On any other document type this is an audit cross-reference and does not change the calculation."
     },
     "purchase_order_number": {
       "type": "string",
@@ -231,6 +231,44 @@
     "entity_type",
     "addresses",
     "lines"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": { "document_type": { "const": "return" } },
+        "required": ["document_type"]
+      },
+      "then": {
+        "properties": {
+          "lines": {
+            "items": {
+              "properties": {
+                "amount": { "pattern": "^-\\d+(\\.\\d+)?$" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "not": {
+          "properties": { "document_type": { "const": "return" } },
+          "required": ["document_type"]
+        }
+      },
+      "then": {
+        "properties": {
+          "lines": {
+            "items": {
+              "properties": {
+                "quantity": { "exclusiveMinimum": 0 }
+              }
+            }
+          }
+        }
+      }
+    }
   ],
   "additionalProperties": false
 }
