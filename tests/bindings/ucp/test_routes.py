@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from bindings.ucp.models import TransactionContext
 from bindings.ucp.router import create_router
-from examples.ucp.mock_engine import calculate
+from examples.ucp.mock.mock_engine import calculate
 
 _HEADERS = {"UCP-Agent": 'profile="https://agent.example/profile"'}
 _BODY = {

@@ -8,7 +8,7 @@ from fastmcp import FastMCP
 
 from bindings.ucp.errors import BindingError
 from bindings.ucp.models import TransactionContext
-from examples.ucp.determine import MockDeterminer
+from examples.ucp.mock.determine import MockDeterminer
 
 
 def build_server(determiner: MockDeterminer | None = None) -> FastMCP:

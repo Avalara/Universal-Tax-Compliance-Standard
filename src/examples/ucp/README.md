@@ -1,8 +1,8 @@
 # Run the forked flower-shop merchant against the UTCS tax binding
 
-This directory is the mock determination provider. It mounts the UCP binding in `src/bindings/ucp` and keeps an in-memory compliance record.
+The mock determination provider is in [`mock`](mock). It mounts the UCP binding in `src/bindings/ucp` and keeps an in-memory compliance record.
 
-The merchant and client forks are not included in this repository. The changes a merchant must make are the same hook described below, applied to another UCP example or another implementation.
+The merchant is forked into [`merchant`](merchant). The matching happy-path client is [`client`](client). Neither process edits the official UCP repositories. The changes a merchant must make are written up in [`merchant/TAX_HOOK.md`](merchant/TAX_HOOK.md) so the same hook can be applied to another example or another implementation.
 
 The binding speaks `dev.ucp.shopping.tax`. Preview (`POST /checkout-sessions/{id}/$previewTax`) does not record anything. Completion (`POST /checkout-sessions/{id}/$determineTax`) forces commit and stores the `TaxResult`. `utcs_determine_tax` is the UTCS MCP tool on the same determine function. The flower-shop client calls only the merchant, and the merchant calls the HTTP binding.
 
@@ -36,6 +36,7 @@ Three processes, and only the merchant bridges the two protocols.
 
 ```text
 flower-shop client          UCP checkout REST           flower-shop merchant
+client                      ---------------------->        merchant
                                                              |
                                                              |  dev.ucp.shopping.tax
                                                              |  minor units, postal_address
@@ -45,7 +46,7 @@ flower-shop client          UCP checkout REST           flower-shop merchant
                                                              |  TransactionContext / TaxResult
                                                              |  decimal strings
                                                              v
-                                                       src/examples/ucp
+                                                       src/examples/ucp/mock
                                                        mock 8.75% engine
                                                        in-memory compliance record
 ```
@@ -54,12 +55,14 @@ UCP remains the commerce protocol: cart, checkout, fulfillment, payment, and ord
 
 `utcs_determine_tax` is a second door to that same function, over MCP, with decimal strings in and out. The flower-shop walk never calls it. It is there to show that the UCP binding and the UTCS core transport share one determination.
 
+The merchant hook, and how to apply it to a different implementation, is [`merchant/TAX_HOOK.md`](merchant/TAX_HOOK.md).
+
 ## Upstream
 
-| Upstream | Role |
+| Upstream | What was forked |
 |---|---|
-| [samples](https://github.com/Universal-Commerce-Protocol/samples) `rest/python/server` | Merchant this binding is called from |
-| [samples](https://github.com/Universal-Commerce-Protocol/samples) `rest/python/client/flower_shop` | Client that talks to that merchant |
+| [samples](https://github.com/Universal-Commerce-Protocol/samples) `rest/python/server` | [`merchant`](merchant) |
+| [samples](https://github.com/Universal-Commerce-Protocol/samples) `rest/python/client/flower_shop` | [`client`](client) |
 | [python-sdk](https://github.com/Universal-Commerce-Protocol/python-sdk) | PyPI dependency `ucp-sdk` |
 | [ucp](https://github.com/Universal-Commerce-Protocol/ucp) | Protocol specification, for reference while reading the binding |
 
@@ -71,15 +74,54 @@ From the root of this repository:
 uv sync --group dev
 ```
 
+Prepare the flower-shop databases once:
+
+```bash
+cd src/examples/ucp/merchant
+uv sync
+mkdir -p /tmp/ucp_test
+uv run import_csv.py \
+  --products_db_path=/tmp/ucp_test/products.db \
+  --transactions_db_path=/tmp/ucp_test/transactions.db \
+  --data_dir=test_data/flower_shop
+```
+
+Install the client when you want the third terminal:
+
+```bash
+cd src/examples/ucp/client
+uv sync
+```
+
 ## Run
 
-From this repository:
+Terminal 1, from this repository:
 
 ```bash
 uv run utcs-ucp-mock
 ```
 
-The server listens on `127.0.0.1:8080` (`UTCS_REST_HOST` and `UTCS_REST_PORT` override that). Discovery is `GET /.well-known/ucp`. A merchant points `--checkout_tax_extension_url` at that address.
+The server listens on `127.0.0.1:8080` (`UTCS_REST_HOST` and `UTCS_REST_PORT` override that). Discovery is `GET /.well-known/ucp`.
+
+Terminal 2, the forked merchant:
+
+```bash
+cd src/examples/ucp/merchant
+uv run server.py \
+  --products_db_path=/tmp/ucp_test/products.db \
+  --transactions_db_path=/tmp/ucp_test/transactions.db \
+  --port=8182 \
+  --checkout_tax_extension_url=http://127.0.0.1:8080
+```
+
+Terminal 3, the forked happy-path client:
+
+```bash
+cd src/examples/ucp/client
+uv run simple_happy_path_client.py \
+  --server_url=http://127.0.0.1:8182 \
+  --tax_extension_url=http://127.0.0.1:8080
+```
 
 A preview adds a `tax` total in minor units after a shipping destination is selected. Completion records the same result with `status: committed` on `checkout.tax.result`. The MCP tool is separate:
 

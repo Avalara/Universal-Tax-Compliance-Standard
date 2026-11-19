@@ -5,7 +5,7 @@ from bindings.ucp.models import (
     UtcsAddress,
     UtcsLine,
 )
-from examples.ucp.determine import MockDeterminer
+from examples.ucp.mock.determine import MockDeterminer
 
 
 def _context(*, commit: bool) -> TransactionContext:

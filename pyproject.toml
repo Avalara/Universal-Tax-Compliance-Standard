@@ -16,8 +16,8 @@ dependencies = [
 dev = ["httpx>=0.27", "pytest>=8.0"]
 
 [project.scripts]
-utcs-ucp-mock = "examples.ucp.server:main"
-utcs-ucp-mcp = "examples.ucp.mcp:main"
+utcs-ucp-mock = "examples.ucp.mock.server:main"
+utcs-ucp-mcp = "examples.ucp.mock.mcp:main"
 
 [build-system]
 requires = ["hatchling>=1.26"]

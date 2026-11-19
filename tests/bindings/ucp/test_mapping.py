@@ -2,7 +2,7 @@
 
 from bindings.ucp.mapping import to_transaction_context, to_ucp_tax
 from bindings.ucp.models import CheckoutTaxRequest
-from examples.ucp.mock_engine import calculate
+from examples.ucp.mock.mock_engine import calculate
 
 _REQUEST = {
     "currency": "USD",

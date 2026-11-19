@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from bindings.ucp.models import TaxResult, TransactionContext
-from examples.ucp.compliance import ComplianceStore
-from examples.ucp.mock_engine import calculate
+from examples.ucp.mock.compliance import ComplianceStore
+from examples.ucp.mock.mock_engine import calculate
 
 
 class MockDeterminer:

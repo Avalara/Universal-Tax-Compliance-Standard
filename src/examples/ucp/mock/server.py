@@ -8,7 +8,7 @@ import uvicorn
 from fastapi import FastAPI
 
 from bindings.ucp.router import create_router
-from examples.ucp.determine import MockDeterminer
+from examples.ucp.mock.determine import MockDeterminer
 
 
 def create_app(determiner: MockDeterminer | None = None) -> FastAPI:

@@ -17,7 +17,9 @@ Avalara, Inc. Licensed under the Apache License, Version 2.0. See
 |------|----------|
 | `spec/` | Normative specification: JSON Schemas, OpenAPI 3.1, MCP tool definitions, registries, conformance profiles, mappings, the UCP binding, and validated examples. |
 | `src/bindings/ucp/` | UCP binding library. Maps checkout tax calls onto a UTCS `TransactionContext` and back, and serves `$previewTax` and `$determineTax`. |
-| `src/examples/ucp/` | Mock determination server and `utcs_determine_tax`. See [`src/examples/ucp/README.md`](src/examples/ucp/README.md). |
+| `src/examples/ucp/mock/` | Mock determination server and `utcs_determine_tax`. |
+| `src/examples/ucp/merchant/` | Fork of the UCP flower-shop merchant with the `dev.ucp.shopping.tax` hook. The portable recipe is [`src/examples/ucp/merchant/TAX_HOOK.md`](src/examples/ucp/merchant/TAX_HOOK.md). |
+| `src/examples/ucp/client/` | Fork of the flower-shop happy-path client. Its platform profile lists `dev.ucp.shopping.tax`. |
 
 An implementation of the specification does not depend on any document outside `spec/`. The file-by-file index is [`spec/README.md`](spec/README.md).
 
