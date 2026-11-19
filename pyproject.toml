@@ -1,0 +1,35 @@
+[project]
+name = "utcs"
+version = "0.1.0"
+description = "UTCS UCP binding and the mock checkout-tax example"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+dependencies = [
+  "fastapi>=0.115.0",
+  "fastmcp>=2.0.0",
+  "pydantic>=2.0",
+  "uvicorn[standard]>=0.32.0",
+]
+
+[dependency-groups]
+dev = ["httpx>=0.27", "pytest>=8.0"]
+
+[project.scripts]
+utcs-ucp-mock = "examples.ucp.server:main"
+utcs-ucp-mcp = "examples.ucp.mcp:main"
+
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bindings", "src/examples"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/bindings" = "bindings"
+"src/examples" = "examples"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
