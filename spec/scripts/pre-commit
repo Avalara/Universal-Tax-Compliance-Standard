@@ -1,0 +1,8 @@
+#!/bin/sh
+# Runs the same conformance check the repository used to run in CI.
+set -eu
+cd "$(dirname "$0")/.."
+if [ ! -d node_modules ] || [ package-lock.json -nt node_modules ]; then
+  npm ci
+fi
+npm run validate

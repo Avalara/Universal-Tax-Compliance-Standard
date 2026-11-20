@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: utcs-validate
+        name: Validate the UTCS specification
+        entry: spec/scripts/pre-commit
+        language: script
+        pass_filenames: false
+        always_run: true

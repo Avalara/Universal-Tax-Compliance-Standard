@@ -202,7 +202,7 @@ npm install
 npm run validate
 ```
 
-A passing run prints a check mark for each check and exits 0. Any failure prints the reason and exits 1. The pipeline that runs this on every merge request is `.gitlab-ci.yml` at the repository root. Node.js 24 is the pinned runtime (`.nvmrc`).
+A passing run prints a check mark for each check and exits 0. Any failure prints the reason and exits 1. The same check runs before each commit once `pre-commit install` has been run from the repository root. Node.js 24 is the pinned runtime (`.nvmrc`).
 
 ### Validate your own input/output against schemas
 

@@ -38,7 +38,7 @@ npm install
 npm run validate
 ```
 
-A passing run prints `OK: all conformance checks passed.` The check validates examples, rejects negative fixtures, lints the OpenAPI document, and compares the manifest, registries, and prose. Continuous integration runs the same check (`.gitlab-ci.yml`). Node.js 24 is pinned in `.nvmrc`.
+A passing run prints `OK: all conformance checks passed.` The check validates examples, rejects negative fixtures, lints the OpenAPI document, and compares the manifest, registries, and prose. The same check runs before each commit once `pre-commit install` has been run. Node.js 24 is pinned in `.nvmrc`.
 
 ## Versioning
 
