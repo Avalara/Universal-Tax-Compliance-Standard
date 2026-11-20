@@ -38,13 +38,6 @@ const a2aBindingFile = join(specRoot, 'bindings', 'a2a.md');
 const SCHEMA_BASE = 'https://utcs.tax/schemas/';
 const HTTP_METHODS = new Set(['get', 'post', 'put', 'delete', 'patch', 'head', 'options', 'trace']);
 
-const WEBHOOKS = [
-  { operationId: 'onTaxCommitted', file: 'tax-committed.schema.json', event: 'utcs.tax.committed' },
-  { operationId: 'onDocumentGenerated', file: 'document-generated.schema.json', event: 'utcs.document.generated' },
-  { operationId: 'onObligationThresholdWarning', file: 'obligation-threshold-warning.schema.json', event: 'utcs.obligation.threshold_warning' },
-  { operationId: 'onObligationThresholdCrossed', file: 'obligation-threshold-crossed.schema.json', event: 'utcs.obligation.threshold_crossed' }
-];
-
 let failures = 0;
 const pass = (m) => console.log(`  \u2713 ${m}`);
 const fail = (m) => { failures += 1; console.error(`  \u2717 ${m}`); };
@@ -96,6 +89,9 @@ function manifestProblems(manifest, registryKeys, openApiKeys) {
     if (transport.type === 'a2a' && !existsSync(a2aBindingFile)) {
       problems.push('transport a2a is advertised but spec/bindings/a2a.md is not published');
     }
+    if (transport.type === 'webhook') {
+      problems.push('transport webhook is reserved and must not be advertised in this version');
+    }
   }
   return problems;
 }
@@ -123,7 +119,10 @@ function checkTools(tools, knownCapabilities) {
       continue;
     }
     const capability = typeof tool.capability === 'string' ? tool.capability.split('@')[0] : '';
-    if (!knownCapabilities.has(capability)) {
+    const experimental = tool.status === 'experimental';
+    if (experimental && knownCapabilities.has(capability)) {
+      problems.push(`${label}: an experimental tool must stay outside the v1 registry`);
+    } else if (!experimental && !knownCapabilities.has(capability)) {
       problems.push(`${label}: capability ${tool.capability || '(missing)'} is not in the REST registry`);
     }
     try {
@@ -169,11 +168,6 @@ function collectEmbeddedExamples(doc) {
       if (HTTP_METHODS.has(method)) consider(op, `${method.toUpperCase()} ${path}`);
     }
   }
-  for (const [name, item] of Object.entries(doc.webhooks || {})) {
-    for (const [method, op] of Object.entries(item || {})) {
-      if (HTTP_METHODS.has(method)) consider(op, `webhook ${name} ${method.toUpperCase()}`);
-    }
-  }
   return out;
 }
 
@@ -206,8 +200,6 @@ const positive = [
   ['determine-exempt.response.json', 'tax-result.schema.json'],
   ['determine-discount.request.json', 'transaction-context.schema.json'],
   ['determine-discount.response.json', 'tax-result.schema.json'],
-  ['determine-crossborder.request.json', 'transaction-context.schema.json'],
-  ['determine-crossborder.response.json', 'tax-result.schema.json'],
   ['determine-retail-delivery-fee.request.json', 'transaction-context.schema.json'],
   ['determine-retail-delivery-fee.response.json', 'tax-result.schema.json'],
   ['determine-return.request.json', 'transaction-context.schema.json'],
@@ -394,13 +386,43 @@ if (doc) {
       fail(`SPECIFICATION.md does not name \`${path}\``);
     }
   }
-  for (const key of found.keys()) {
-    if (!registryKeys.has(key)) { registryOk = false; fail(`OpenAPI operation missing from registry: ${key}`); }
+  const experimentalKeys = [];
+  for (const [key, op] of found) {
+    const experimental = op && op['x-utcs-status'] === 'experimental';
+    if (experimental) experimentalKeys.push(key);
+    if (experimental && registryKeys.has(key)) {
+      registryOk = false;
+      fail(`${key} is experimental and must stay out of the v1 registry`);
+    } else if (!experimental && !registryKeys.has(key)) {
+      registryOk = false;
+      fail(`OpenAPI operation missing from registry: ${key}`);
+    }
   }
-  if (registryOk) pass(`REST registry matches OpenAPI (${registryKeys.size} operations)`);
+  if (registryOk) pass(`REST registry matches OpenAPI (${registryKeys.size} operations, ${experimentalKeys.length} experimental)`);
 
   if (found.has('POST /tax/void')) fail('OpenAPI defines POST /tax/void; void is a document_type, not an operation');
   else pass('no /tax/void operation');
+  const expectedExperimental = ['POST /cross-border/calculate', 'GET /obligations'];
+  if (expectedExperimental.every((key) => experimentalKeys.includes(key))) {
+    pass('cross-border and filing obligations are experimental');
+  } else {
+    fail(`experimental operations are ${experimentalKeys.join(', ') || '(none)'}; expected ${expectedExperimental.join(' and ')}`);
+  }
+  const hooks = doc.webhooks || {};
+  const hookIds = Object.values(hooks).map((item) => item && item.post).filter(Boolean);
+  if (hookIds.length === 4 && hookIds.every((op) => op['x-utcs-status'] === 'experimental')) {
+    pass('webhook binding is experimental');
+  } else {
+    fail('webhook binding must publish four events, each with x-utcs-status: experimental');
+  }
+
+  const tx = readJson(join(schemasDir, 'transaction-context.schema.json'));
+  for (const name of ['business_identification_no', 'delivery_terms', 'is_seller_importer_of_record']) {
+    if (tx.properties && tx.properties[name]) fail(`transaction context still defines ${name}`);
+  }
+  const docTypes = (tx.properties && tx.properties.document_type && tx.properties.document_type.enum) || [];
+  if (docTypes.includes('reverse_charge') || docTypes.includes('customs')) fail('document_type still includes a reserved value');
+  else pass('transaction context omits reserved VAT and import members');
 
   const manifest = readJson(manifestFile);
   const published = manifestProblems(manifest, byCapability, found);
@@ -427,20 +449,6 @@ if (doc) {
     fail('OpenAPI ErrorResponse code enum does not match the registry');
   }
 
-  for (const hook of WEBHOOKS) {
-    const schemaPath = join(schemasDir, 'webhooks', hook.file);
-    if (!existsSync(schemaPath)) { fail(`missing webhook schema ${hook.file}`); continue; }
-    const schema = readJson(schemaPath);
-    const event = schema.properties && schema.properties.event_type && schema.properties.event_type.const;
-    if (event !== hook.event) fail(`${hook.file} event_type is ${event}, expected ${hook.event}`);
-    const op = doc.webhooks && Object.values(doc.webhooks).map((item) => item.post).find((item) => item && item.operationId === hook.operationId);
-    const ref = op && op.requestBody && op.requestBody.content && op.requestBody.content['application/json'] && op.requestBody.content['application/json'].schema && op.requestBody.content['application/json'].schema.$ref;
-    if (!op) fail(`OpenAPI webhook ${hook.operationId} missing`);
-    else if (!ref || !ref.endsWith(hook.file)) fail(`${hook.operationId} schema $ref does not point at ${hook.file}`);
-    else if (!specification.includes(hook.event)) fail(`SPECIFICATION.md does not name ${hook.event}`);
-    else pass(`${hook.operationId} -> ${hook.file}`);
-  }
-
   const mcp = readJson(mcpFile);
   let toolsNamed = true;
   for (const tool of mcp.tools) {
@@ -454,12 +462,25 @@ if (doc) {
 
 console.log('\nNeutrality and public references:');
 const manifestText = readFileSync(manifestFile, 'utf8');
-if (/avalara\.com|utcs-support@|"id": "avalara"/i.test(manifestText)) {
-  fail('discovery-manifest.example.json still names an Avalara host, mailbox, or provider id');
+const isExampleHost = (host) => host === 'example.com' || host.endsWith('.example.com');
+const hostsIn = (text) => [...text.matchAll(/https?:\/\/([^/\s"'<>)\]]+)/g)].map((match) => match[1].toLowerCase().replace(/:\d+$/, ''));
+const mailDomainsIn = (text) => [...text.matchAll(/[A-Za-z0-9._%+-]+@((?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,})/g)].map((match) => match[1].toLowerCase());
+// Public reference sites the manifest example may cite. Every other host and every mailbox stays under example.com.
+const manifestReferenceHosts = new Set(['www.streamlinedsalestax.org']);
+const manifestNeutral = readJson(manifestFile).provider?.id === 'example-tax'
+  && hostsIn(manifestText).every((host) => isExampleHost(host) || manifestReferenceHosts.has(host))
+  && mailDomainsIn(manifestText).every(isExampleHost);
+if (!manifestNeutral) {
+  fail('discovery-manifest.example.json must use the provider id example-tax, with hosts and mailboxes under example.com');
 } else pass('discovery manifest example uses a neutral provider');
 
-if (/utcs-spec@avalara\.com|Josh McMillen|Avalara, Inc\./.test(openApiText)) {
-  fail('OpenAPI description still names a single Avalara author or an unconfirmed mailbox');
+const openApiContact = parseYaml(openApiText)?.info?.contact ?? {};
+const openApiNeutral = openApiContact.name === 'UTCS Maintainers'
+  && !openApiContact.email && !openApiContact.url
+  && mailDomainsIn(openApiText).every(isExampleHost)
+  && !/Avalara, Inc\./.test(openApiText);
+if (!openApiNeutral) {
+  fail('OpenAPI contact must be the UTCS Maintainers group, with no author and no mailbox outside example.com');
 } else pass('OpenAPI contact is the maintainers group');
 
 const examplesText = readdirSync(examplesDir).filter((name) => name.endsWith('.json')).map((name) => readFileSync(join(examplesDir, name), 'utf8')).join('\n');
@@ -467,8 +488,10 @@ if (/avalara/i.test(examplesText)) fail('a worked example still contains "avalar
 else pass('worked examples do not name Avalara');
 
 const ucpText = readFileSync(ucpBindingFile, 'utf8');
-if (ucpText.includes('scm.platform.us-west-2.avalara.io')) fail('bindings/ucp.md still links to a private GitLab host');
-else pass('UCP binding has no private GitLab URL');
+// Public hosts the UCP binding may link to. Add a host here when the binding needs one.
+const ucpLinkHosts = new Set(['ucp.dev', 'github.com']);
+if (!hostsIn(ucpText).every((host) => ucpLinkHosts.has(host))) fail('bindings/ucp.md links to a host that is not on its list of public hosts');
+else pass('UCP binding links only to public hosts');
 if (/\bA2A transport binding/.test(ucpText) || /beside the REST, MCP, and A2A/.test(ucpText)) {
   fail('bindings/ucp.md still treats an A2A binding as published');
 } else pass('UCP binding does not claim a published A2A binding');

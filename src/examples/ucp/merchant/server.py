@@ -151,7 +151,7 @@ def main(argv: Sequence[str]) -> None:
     print(config.FLAGS.main_module_help())  # noqa: T201
     sys.exit(1)
 
-  uvicorn.run(app, host="0.0.0.0", port=config.FLAGS.port)
+  uvicorn.run(app, host="127.0.0.1", port=config.FLAGS.port)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,6 @@
+# Copyright 2026 Avalara, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """Mock provider: preview does not record, commit does."""
 
 from bindings.ucp.models import (

@@ -1,3 +1,6 @@
+# Copyright 2026 Avalara, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """In-memory compliance state. A later ledger would hash these records."""
 
 from __future__ import annotations

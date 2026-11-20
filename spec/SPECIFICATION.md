@@ -8,8 +8,6 @@
 
 This document is the normative prose for UTCS. The JSON Schemas under `schemas/`, the REST binding in `openapi/utcs-v1.yaml`, the MCP tools in `mcp/utcs-mcp-tools.json`, and the registries under `registries/` are normative machine-readable parts of the same specification. Worked examples are informative. A profile, mapping, or protocol binding is normative only for an implementation that claims that profile, mapping, or binding, and only at the maturity recorded in [STATUS.md](STATUS.md).
 
-Strategy material that may sit beside this tree is not part of the specification. An implementation does not need it.
-
 The key words MUST, MUST NOT, REQUIRED, SHOULD, SHOULD NOT, RECOMMENDED, MAY, and OPTIONAL in this document are to be interpreted as described in RFC 2119 and RFC 8174.
 
 ---
@@ -18,17 +16,22 @@ The key words MUST, MUST NOT, REQUIRED, SHOULD, SHOULD NOT, RECOMMENDED, MAY, an
 
 UTCS defines how tax compliance is requested and returned for a transaction. It does not define which commerce protocol started the transaction, and it does not define tax rates, boundaries, or product taxonomies. A provider supplies those. The specification supplies the envelope.
 
+**Envelope 1.0 is US sales and use tax at checkout, for B2C and B2B alike, as this specification stands today.** A conforming determination prices that tax and returns the result on the response. Anything this version does not build out belongs to a later version. That includes VAT, GST, and other non-US tax, including VAT reverse charge and buyer VAT identifiers, and it includes e-invoicing.
+
+The names `cross-border`, `filing-obligations`, and `elr-reporting` are reserved. They are not envelope 1.0 capabilities. A provider MUST NOT advertise them. `cross-border` and `filing-obligations` are published as Experimental operations in the REST binding: conforming to this envelope does not require them, and they are not in `registries/rest-operations.json`. `elr-reporting` has no operation in this version. `UTCS-7001`, `UTCS-7002`, and `UTCS-7003` are reserved for `cross-border`. `UTCS-8001` and `UTCS-8002` are reserved for `elr-reporting`. The open questions are in [ROADMAP.md](ROADMAP.md).
+
+These names serve that later work and are not members of the envelope 1.0 schemas: `business_identification_no`, `tax_registration_ids`, the document types `reverse_charge` and `customs`, `intra_community_supply`, the address roles `import` and `goods_place_or_service_rendered`, `delivery_terms`, `is_seller_importer_of_record`, `hs_code`, and the tax types `vat`, `gst`, and `duty`. `addresses.bill_to` is part of this version: California SB 122, effective 1 January 2027, sources SaaS and prewritten software by the billing address first, and [section 3.1](#31-transaction-context) states that rule. The US-to-Germany determination is kept under `later/` and is not an example of this version. The Canadian HST landed-cost sample is the Experimental example on `POST /cross-border/calculate`.
+
 A **conforming provider** implements every Core capability it is required to implement, publishes a discovery manifest, and follows the error, security, and versioning rules in this document. Capabilities are grouped into tiers:
 
 | Tier | Requirement | Capabilities |
 |------|-------------|--------------|
 | Core | MUST implement | `tax-determination`, `jurisdiction-resolution` |
 | Standard | SHOULD implement | `product-classification`, `exemption-validation`, `compliance-documents` |
-| Advanced | MAY implement | `cross-border`, `filing-obligations` |
+
+This version defines no Advanced capability.
 
 A provider MUST NOT advertise a capability it does not implement. A consumer that requires a capability the provider does not advertise MUST NOT silently drop that requirement. The gap MUST be surfaced to the caller.
-
-`elr-reporting` (e-invoicing and live reporting) is not a capability in this version. The `UTCS-8xxx` codes are reserved for it.
 
 ### 1.1 Capability identity and dependencies
 
@@ -41,8 +44,6 @@ A capability is named `name@major.minor`. The dependencies below are normative. 
 | `product-classification` | none |
 | `exemption-validation` | `tax-determination` |
 | `compliance-documents` | `tax-determination` |
-| `cross-border` | `tax-determination`, `product-classification` |
-| `filing-obligations` | `tax-determination`, `jurisdiction-resolution` |
 
 ### 1.2 Input and output
 
@@ -172,9 +173,9 @@ The registry is also published as `registries/error-codes.json`. The schema enum
 | `UTCS-5004` | exemption | Exemption not valid for the product |
 | `UTCS-6001` | document | Document code already committed |
 | `UTCS-6002` | document | Document not found for void or adjustment |
-| `UTCS-7001` | cross_border | HS code classification failed |
-| `UTCS-7002` | cross_border | Country of origin required but not provided |
-| `UTCS-7003` | cross_border | Trade agreement validation failed |
+| `UTCS-7001` | cross_border | HS code classification failed. Reserved. `cross-border` is not a capability in this version. |
+| `UTCS-7002` | cross_border | Country of origin required but not provided. Reserved. `cross-border` is not a capability in this version. |
+| `UTCS-7003` | cross_border | Trade agreement validation failed. Reserved. `cross-border` is not a capability in this version. |
 | `UTCS-8001` | elr | Reporting submission failed. Reserved. `elr-reporting` is not a capability in this version. |
 | `UTCS-8002` | elr | Reporting format not supported for the jurisdiction. Reserved. `elr-reporting` is not a capability in this version. |
 
@@ -195,12 +196,16 @@ Operation paths below are relative to the REST base URL. That base URL includes 
 | POST | `/exemptions/validate` | `exemption-validation` |
 | GET | `/documents/{document_id}` | `compliance-documents` |
 | POST | `/documents` | `compliance-documents` |
-| POST | `/cross-border/calculate` | `cross-border` |
-| GET | `/obligations` | `filing-obligations` |
 
 There is no `/tax/void` path and no `/classify` path.
 
 `document_id` identifies a compliance document and appears on `GET /documents/{document_id}`, on the document body, and on `utcs.document.generated`. `document_code` and `result_id` are defined in section 3.2. The three identifiers have different roles. `document_code` and `result_id` MAY be the same value. `document_id` exists only once a compliance document exists.
+
+### Experimental operations
+
+`POST /cross-border/calculate` and `GET /obligations` are published in the REST binding with `x-utcs-status: experimental`. They are not in the registry above. Conforming to envelope 1.0 does not require them. A provider MUST NOT advertise `cross-border` or `filing-obligations`.
+
+The matching tools are `utcs_calculate_duties` and `utcs_check_obligations`. Each carries `"status": "experimental"` in `mcp/utcs-mcp-tools.json`.
 
 REST requirements:
 
@@ -220,14 +225,14 @@ The MCP binding exposes one tool per capability that has a tool in `mcp/utcs-mcp
 | `utcs_classify_product` | `product-classification` |
 | `utcs_validate_exemption` | `exemption-validation` |
 | `utcs_get_document` | `compliance-documents` |
-| `utcs_calculate_duties` | `cross-border` |
-| `utcs_check_obligations` | `filing-obligations` |
 
 `POST /documents` has no separate MCP tool in this version. Retrieval is `utcs_get_document`.
 
 ### 5.2 Webhooks
 
-Four events are specified. Each payload schema lives under `schemas/webhooks/`. A provider that sends webhooks MUST sign the raw body and put the signature in `signature`. A consumer MUST reject a payload that fails verification.
+The webhook binding is Experimental. Conforming to envelope 1.0 does not require it. Checkout receives the tax result on the response to tax determination. The manifest value `webhook` is reserved. A provider MUST NOT advertise it.
+
+Four events are specified. Each payload schema lives under `schemas/webhooks/`. A provider that sends webhooks MUST sign the raw body and put the signature in `signature`. A consumer MUST reject a payload that fails verification. `utcs.obligation.threshold_warning` and `utcs.obligation.threshold_crossed` belong to `filing-obligations`.
 
 | Event | Schema |
 |-------|--------|

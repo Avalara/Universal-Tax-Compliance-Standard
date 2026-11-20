@@ -53,6 +53,7 @@ Sourcing is the provider's determination. UTCS neither defines sourcing rules no
 | Location where the order is received | `addresses.ship_from` or `addresses.point_of_order_acceptance` |
 | Location where the product is received by the purchaser | `addresses.ship_to` |
 | Origin for origin-sourced intrastate sales | `addresses.point_of_order_origin` |
+| Billing address | `addresses.bill_to` |
 
 A provider claiming `us-sst` conformance is asserting that its own sourcing follows the SSUTA hierarchy. UTCS carries the address facts; the provider owns the rules.
 
@@ -114,7 +115,7 @@ The controlled `exemption_reason` values align to the F0003 reason categories:
 | Foreign diplomat | `foreign_diplomat` |
 | Other (provider explains via `exemption_type`) | `other` |
 
-`export` and `intra_community_supply` exist in the core vocabulary for cross-border use and do not apply under `us-sst`.
+`export` is in the core vocabulary and does not apply under `us-sst`.
 
 ## 9. Rounding
 
@@ -122,11 +123,11 @@ The UTCS core default is half-up rounding to the currency minor unit, computed p
 
 ## 10. Returns and filing
 
-Filing SST returns is the provider's responsibility and sits outside the UTCS calculation contract. UTCS determines per-transaction tax; the provider aggregates committed transactions and files the Simplified Electronic Return (SER) through its own systems. The `filing-obligations` advanced capability MAY report where a transaction will be filed, but UTCS does not generate, format, or transmit returns.
+Filing SST returns is the provider's responsibility and sits outside the UTCS calculation contract. UTCS determines per-transaction tax; the provider aggregates committed transactions and files the Simplified Electronic Return (SER) through its own systems. The name `filing-obligations` is reserved for a later version. This version does not generate, format, or transmit returns.
 
 ## 11. Registration
 
-SST sellers register through the Streamlined Sales Tax Registration System. Registration is a provider and merchant concern, outside the per-transaction contract. A provider MAY carry a seller's registration identifier through `business_identification_no` on the Transaction Context.
+SST sellers register through the Streamlined Sales Tax Registration System. Registration is a provider and merchant concern, outside the per-transaction contract. `company_code` routes a transaction to the selling entity. A seller VAT or GST registration number belongs to a later version.
 
 ## 12. What this profile does not change
 

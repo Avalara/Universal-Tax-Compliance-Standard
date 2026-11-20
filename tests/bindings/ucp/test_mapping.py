@@ -1,3 +1,6 @@
+# Copyright 2026 Avalara, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """Mapping tests for the UCP tax binding."""
 
 from bindings.ucp.mapping import to_transaction_context, to_ucp_tax

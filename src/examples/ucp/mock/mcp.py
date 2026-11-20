@@ -1,3 +1,6 @@
+# Copyright 2026 Avalara, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """MCP transport for the UTCS core. Speaks TransactionContext, not the UCP wire."""
 
 from __future__ import annotations

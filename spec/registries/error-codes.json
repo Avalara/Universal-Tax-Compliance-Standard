@@ -20,10 +20,10 @@
     { "code": "UTCS-5004", "category": "exemption", "summary": "Exemption not valid for the product" },
     { "code": "UTCS-6001", "category": "document", "summary": "Document code already committed" },
     { "code": "UTCS-6002", "category": "document", "summary": "Document not found for void or adjustment" },
-    { "code": "UTCS-7001", "category": "cross_border", "summary": "HS code classification failed" },
-    { "code": "UTCS-7002", "category": "cross_border", "summary": "Country of origin required but not provided" },
-    { "code": "UTCS-7003", "category": "cross_border", "summary": "Trade agreement validation failed" },
-    { "code": "UTCS-8001", "category": "elr", "summary": "Reporting submission failed" },
-    { "code": "UTCS-8002", "category": "elr", "summary": "Reporting format not supported for the jurisdiction" }
+    { "code": "UTCS-7001", "category": "cross_border", "summary": "HS code classification failed. Reserved. cross-border is not a capability in this version." },
+    { "code": "UTCS-7002", "category": "cross_border", "summary": "Country of origin required but not provided. Reserved. cross-border is not a capability in this version." },
+    { "code": "UTCS-7003", "category": "cross_border", "summary": "Trade agreement validation failed. Reserved. cross-border is not a capability in this version." },
+    { "code": "UTCS-8001", "category": "elr", "summary": "Reporting submission failed. Reserved. elr-reporting is not a capability in this version." },
+    { "code": "UTCS-8002", "category": "elr", "summary": "Reporting format not supported for the jurisdiction. Reserved. elr-reporting is not a capability in this version." }
   ]
 }

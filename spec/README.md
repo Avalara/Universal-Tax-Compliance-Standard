@@ -32,7 +32,9 @@ spec/
 │   ├── classification-result.schema.json
 │   ├── exemption-validation-request.schema.json
 │   ├── exemption-validation-result.schema.json
-│   └── webhooks/                      ← Four webhook payload schemas
+│   └── webhooks/                      ← Four experimental webhook payload schemas
+├── later/                             ← VAT/GST sketches, not part of envelope 1.0
+│   └── examples/                      ← US-to-Germany determination
 ├── profiles/
 │   └── us-sst.md                      ← US Streamlined Sales Tax conformance profile
 ├── mappings/
@@ -44,7 +46,7 @@ spec/
 ├── openapi/
 │   └── utcs-v1.yaml                   ← OpenAPI 3.1, REST transport binding
 ├── mcp/
-│   └── utcs-mcp-tools.json            ← MCP tool definitions (7 tools)
+│   └── utcs-mcp-tools.json            ← MCP tool definitions (5 v1.0, 2 experimental)
 ├── examples/                          ← Validated sample request/response payloads
 │   ├── determine-basic.request.json
 │   ├── determine-basic.response.json
@@ -54,8 +56,6 @@ spec/
 │   ├── determine-exempt.response.json
 │   ├── determine-discount.request.json
 │   ├── determine-discount.response.json
-│   ├── determine-crossborder.request.json
-│   ├── determine-crossborder.response.json
 │   ├── determine-retail-delivery-fee.request.json
 │   ├── determine-retail-delivery-fee.response.json
 │   ├── error-insufficient-address.response.json
@@ -88,7 +88,7 @@ Schemas use **JSON Schema draft 2020-12**. Most identify themselves with an `$id
 | File | Description | Origin |
 |------|-------------|---------------|
 | `address.schema.json` | Address with oneOf: text path (line1 + city + postal_code + country) or geocoordinate path (latitude + longitude + country). ISO 3166-1 alpha-2 country codes. Optional `location_code` is the seller's outlet code for local reporting. When several addresses carry one, the seller origin governs. | §4, §5 |
-| `line-item.schema.json` | Line item with line_number, quantity, amount (decimal string). A negative quantity is allowed only on a return, and a return line's amount MUST be negative. Optional: item_code, description, tax_code (standard or custom value), tax_included, `discounted`, hs_code, revenue_account, `entity_use_code` (per-line use-based exemption), per-line `exemption_certificate_id` (applied or the request fails `UTCS-5xxx`), per-line `addresses` (ship_from/ship_to override for drop-ship or split origin), per-line `tax_override`, parameters. | §6.2.3 |
+| `line-item.schema.json` | Line item with line_number, quantity, amount (decimal string). A negative quantity is allowed only on a return, and a return line's amount MUST be negative. Optional: item_code, description, tax_code (standard or custom value), tax_included, `discounted`, revenue_account, `entity_use_code` (per-line use-based exemption), per-line `exemption_certificate_id` (applied or the request fails `UTCS-5xxx`), per-line `addresses` (ship_from/ship_to override for drop-ship or split origin), per-line `tax_override`, parameters. | §6.2.3 |
 | `jurisdiction-breakdown.schema.json` | Single jurisdiction levy: jurisdiction_type, jurisdiction_code, jurisdiction_code_system (fips/iso/provider-defined), tax_type (incl. sellers_use/consumer_use), tax_category (UBL UNCL 5305), `fee_basis` (ad_valorem / flat / per_unit) with `rate` required only for ad_valorem and `unit_rate`/`units` carrying per_unit levies, amounts, rate_rule_id, exemption_applied (with controlled exemption_reason). | §6.3.3 |
 | `attestation.schema.json` | Provider attestation: provider_id, provider_name, content_version, calculation_timestamp, engine_version, optional signature. | §6 |
 | `error-response.schema.json` | Three-layer error model: structured UTCS-XXXX code, human message, machine-actionable recovery hints. All error codes from UTCS-1001 through UTCS-8002. | §7 |
@@ -98,7 +98,7 @@ Schemas use **JSON Schema draft 2020-12**. Most identify themselves with an `$id
 | File | Description | Origin |
 |------|-------------|---------------|
 | `discovery-manifest.schema.json` | Provider discovery manifest served at `/.well-known/tax-compliance`. Declares capabilities, transports, authentication, input profiles, rounding configuration (SSUTA §324-aligned default), conformance_profiles, certification badges. | §4, §6.6, §6.8, §8, §9, §10 |
-| `transaction-context.schema.json` | Canonical input. Flexible structure accepting any Input Profile. Required fields: document_type (incl. `void` and `return`), transaction_date, currency_code, commit, entity_type, addresses, lines. Optional: `document_code` (caller's key; the provider MAY generate one when it is omitted; a caller SHOULD send it when `commit` is true so `UTCS-6001` can reject a repeated commit), `company_code` (routes to the selling entity), customer (with `entity_use_code` for use-based exemption and `exemption_certificate_id`, which is applied or fails `UTCS-5xxx`), `discount`, `marketplace` (facilitator liability context), `reference_code` (on a return, reverses the original tax), `purchase_order_number`, `addresses.bill_to` (billing address for bill-to sourcing, including California SB 122), `delivery_terms` (ICC Incoterms 2020) and `is_seller_importer_of_record` (cross-border import-tax liability), tax_override, parameters. | §6.2 |
+| `transaction-context.schema.json` | Canonical input for US sales and use tax at checkout. Required fields: document_type (incl. `void` and `return`), transaction_date, currency_code, commit, entity_type, addresses, lines. Optional: `document_code` (caller's key; the provider MAY generate one when it is omitted; a caller SHOULD send it when `commit` is true so `UTCS-6001` can reject a repeated commit), `company_code` (routes to the selling entity), customer (with `entity_use_code` for use-based exemption and `exemption_certificate_id`, which is applied or fails `UTCS-5xxx`), `discount`, `marketplace` (facilitator liability context), `reference_code` (on a return, reverses the original tax), `purchase_order_number`, `addresses.bill_to` (billing address for bill-to sourcing, including California SB 122), tax_override, parameters. | §6.2 |
 | `tax-result.schema.json` | Canonical output. Strict structure: result_id (the provider's key, which MAY equal document_code), document_code (the caller's key when they sent one, otherwise provider-generated; not an echo of an omitted field), status, totals (decimal strings, incl. `total_non_taxable` and optional `total_discount`), currency_code, per-line amounts (taxable_amount, exempt_amount, `non_taxable_amount`, optional discount_amount), line-level jurisdictions (with tax_category, jurisdiction_code_system), an optional order-level `jurisdictions[]` rollup, and attestation. Optional line-level `tax_calculated` and result-level `total_tax_calculated` (engine amount before any tax_override), result-level `conformance[]` annotation, `messages[]` (info/warning/error notices; nexus-not-established is a warning, an estimated rate is not), and `adjustment` (set when status is `adjusted`). `document_id` is not a member; it exists only on a compliance document. | §6.3 |
 
 ## OpenAPI Specification (`openapi/`)
@@ -106,11 +106,12 @@ Schemas use **JSON Schema draft 2020-12**. Most identify themselves with an `$id
 **`utcs-v1.yaml`** — Full OpenAPI 3.1.0 specification for the UTCS REST transport binding.
 
 Covers:
-- **8 endpoints** across Core, Standard, and Advanced capability tiers
+- **7 v1.0 endpoints** across Core and Standard. Envelope 1.0 is US sales and use tax at checkout.
+- **2 Experimental endpoints**: `POST /cross-border/calculate` and `GET /obligations`, marked `x-utcs-status: experimental` and kept out of the v1.0 registry
+- **4 experimental webhooks**: tax committed, document generated, obligation threshold warning and crossed
 - **3 security schemes**: Bearer token, OAuth 2.0 client credentials, API key
-- **4 webhook definitions**: tax committed, document generated, obligation threshold warning and crossed
 - **10 design principles**: protocol-agnostic through low barrier to entry
-- **Worked examples**: request and response payloads on every endpoint — determination, jurisdiction resolution, classification, exemption validation, compliance documents, cross-border landed cost, and filing obligations
+- **Worked examples**: request and response payloads on every endpoint — determination, jurisdiction resolution, classification, exemption validation, and compliance documents
 - **X-UTCS-Input-Profile** header for input profile negotiation
 
 ### Endpoint Summary
@@ -124,14 +125,14 @@ Covers:
 | POST | `/exemptions/validate` | exemption-validation | Standard |
 | GET | `/documents/{document_id}` | compliance-documents | Standard |
 | POST | `/documents` | compliance-documents | Standard |
-| POST | `/cross-border/calculate` | cross-border | Advanced |
-| GET | `/obligations` | filing-obligations | Advanced |
+| POST | `/cross-border/calculate` | cross-border | Experimental |
+| GET | `/obligations` | filing-obligations | Experimental |
 
 Paths are relative to the server URL, `https://{provider}/utcs/v1`. A void is `document_type: void` on `POST /tax/determine`. There is no `/tax/void` operation. `POST /tax-codes/classify` is the classification operation. There is no `/classify` operation.
 
 ## MCP Tool Definitions (`mcp/`)
 
-**`utcs-mcp-tools.json`** — 7 MCP tool definitions for the UTCS MCP transport binding.
+**`utcs-mcp-tools.json`** — 5 v1.0 MCP tools, plus 2 Experimental tools that stay out of the v1.0 registry.
 
 Tool names use the `utcs_` prefix (configurable via `tools_prefix` in the discovery manifest).
 
@@ -142,8 +143,8 @@ Tool names use the `utcs_` prefix (configurable via `tools_prefix` in the discov
 | `utcs_classify_product` | product-classification@1.0 | Standard |
 | `utcs_validate_exemption` | exemption-validation@1.0 | Standard |
 | `utcs_get_document` | compliance-documents@1.0 | Standard |
-| `utcs_calculate_duties` | cross-border@1.0 | Advanced |
-| `utcs_check_obligations` | filing-obligations@1.0 | Advanced |
+| `utcs_calculate_duties` | cross-border@1.0 | Experimental |
+| `utcs_check_obligations` | filing-obligations@1.0 | Experimental |
 
 ## Conformance Profiles (`profiles/`)
 
@@ -159,8 +160,8 @@ Mappings render a UTCS Tax Result into an external document or reporting format.
 
 | File | Target | Notes |
 |------|--------|-------|
-| `ubl.md` | OASIS UBL 2.x | Maps tax_type to UNCL 5153 TaxScheme and tax_category to UNCL 5305 TaxCategory; foundation for EN 16931 and Peppol BIS Billing 3.0. |
-| `examples/utcs-to-ubl-invoice.md` | UBL Invoice | Worked Tax Result to UBL `cac:TaxTotal` tax block (EU VAT). |
+| `ubl.md` | OASIS UBL 2.x | Later-version sketch for e-invoicing. Not part of envelope 1.0. |
+| `examples/utcs-to-ubl-invoice.md` | UBL Invoice | Later-version sketch of a Tax Result as a UBL `cac:TaxTotal` (EU VAT). |
 
 ## Protocol Bindings (`bindings/`)
 
@@ -180,13 +181,14 @@ Worked request and response payloads that validate against the schemas. The vali
 | `determine-multijurisdiction.request.json` / `.response.json` | transaction-context / tax-result | Two-line committed B2C sale into Los Angeles, CA, routed through a `marketplace` facilitator. State, county, district, and special levies per line, with the order-level `jurisdictions[]` rollup summed across both lines. |
 | `determine-exempt.request.json` / `.response.json` | transaction-context / tax-result | B2B resale into Columbus, OH with an exemption certificate and a resale `entity_use_code`. Zero tax, `tax_category` E, `exemption_applied`, and a `us-sst` conformance annotation. |
 | `determine-discount.request.json` / `.response.json` | transaction-context / tax-result | Two-line B2C sale into Austin, TX with an 80.00 document `discount` allocated across both `discounted` lines. Per-line `discount_amount` (20.00 / 60.00), taxable basis reduced before tax, `total_discount`, and `total_amount` held at the gross line sum. |
-| `determine-crossborder.request.json` / `.response.json` | transaction-context / tax-result | US-to-Germany B2C sale under `DDP` terms with `is_seller_importer_of_record`. German VAT at 19% (`tax_type` vat, `iso-3166-1` country code), plus an info `messages[]` entry explaining the DDP importer-of-record assessment. |
 | `determine-retail-delivery-fee.request.json` / `.response.json` | transaction-context / tax-result | Two-line B2C sale delivered into Denver, CO. Line 1 carries ad_valorem sales tax (state + Denver + RTD + SCFD, 8.81%); line 2 is the Colorado retail delivery fee as a `fee_basis` `flat` levy (0.31 flat, no `rate`), exercising both branches of the fee-basis rule. |
 | `determine-return.request.json` | transaction-context | Return of the basic sale (`reference_code` `SO-100432`): the one widget at 100.00, quantity -1, amount -100.00. The referenced original's tax is reversed, not recalculated. |
 | `error-insufficient-address.response.json` | common/error-response | UTCS-3001 input error: destination address missing, with recovery hints. |
 | `discovery-manifest.example.json` | discovery-manifest | Illustrative provider manifest. Hosts are under `example.com`. Certification badges show the schema; they are not a certification record. |
 
 The order-level rollup and conformance annotations are deliberate: the rollup gives a per-jurisdiction total across all lines while the line-level breakdown is preserved, and only the Ohio example claims `us-sst` because it is the only example in a Streamlined Sales Tax member state.
+
+The US-to-Germany determination is `later/examples/determine-crossborder.request.json` and `determine-crossborder.response.json`. It is not part of this validated set. The Canadian HST sample is the Experimental example on `POST /cross-border/calculate` in `openapi/utcs-v1.yaml`.
 
 ## Usage
 

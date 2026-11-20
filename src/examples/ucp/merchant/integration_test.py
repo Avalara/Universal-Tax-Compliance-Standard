@@ -3285,7 +3285,7 @@ class IntegrationTest(absltest.TestCase):
     self.assertEqual(sorted(ucp_caps), ["dev.ucp.shopping.checkout"])
 
   def test_discovery_includes_default_checkout_tax_extension(self) -> None:
-    """Built-in Avalara tax extension is advertised in the discovery profile."""
+    """Built-in tax extension is advertised in the discovery profile."""
     with self.client:
       response = self.client.get("/.well-known/ucp")
     self.assertEqual(response.status_code, 200)

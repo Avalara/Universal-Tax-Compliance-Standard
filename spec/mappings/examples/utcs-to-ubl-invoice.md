@@ -1,6 +1,8 @@
 # Worked Example: UTCS Tax Result to UBL Invoice Tax Block
 
-This example renders a UTCS Tax Result as the tax block of a UBL Invoice. It follows the mapping in [`../ubl.md`](../ubl.md). The scenario is a single-line EU VAT sale, which is UBL's native territory and exercises EN 16931 cleanly.
+**Status:** Sketch for a later version. Envelope 1.0 does not include e-invoicing.
+
+This example renders a UTCS Tax Result as the tax block of a UBL Invoice. It follows the mapping in [`../ubl.md`](../ubl.md). The scenario is a single-line EU VAT sale, which is UBL's native territory and exercises EN 16931 cleanly. It uses `intra_community_supply` and `tax_type` `vat`, both reserved for that later version.
 
 ## Scenario
 

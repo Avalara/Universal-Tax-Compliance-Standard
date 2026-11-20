@@ -1,3 +1,6 @@
+# Copyright 2026 Avalara, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """Route tests. The determine function is injected and does not store anything itself."""
 
 from fastapi import FastAPI

@@ -154,7 +154,7 @@
           "tax_type": {
             "type": "string",
             "description": "Type of tax levied by this jurisdiction. Provider-derived OUTPUT.",
-            "enum": ["sales_tax", "sellers_use", "consumer_use", "use_tax", "vat", "gst", "excise", "duty", "environmental_fee"]
+            "enum": ["sales_tax", "sellers_use", "consumer_use", "use_tax", "excise", "environmental_fee"]
           },
           "taxable_amount": {
             "type": "string",
@@ -184,14 +184,14 @@
     },
     "conformance": {
       "type": "array",
-      "description": "Conformance profiles the provider applied when producing this result (OUTPUT annotation). Each profile is declared in the provider manifest under conformance_profiles. Not supplied by the caller. Example: a US sale returns [{\"id\":\"us-sst\"}]; a cross-border EU invoice returns [{\"id\":\"en16931\"}].",
+      "description": "Conformance profiles the provider applied when producing this result (OUTPUT annotation). Each profile is declared in the provider manifest under conformance_profiles. Not supplied by the caller. A US sale returns [{\"id\":\"us-sst\"}].",
       "items": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "description": "Conformance profile identifier applied to this result.",
-            "examples": ["us-sst", "en16931"]
+            "examples": ["us-sst"]
           },
           "version": {
             "type": "string",

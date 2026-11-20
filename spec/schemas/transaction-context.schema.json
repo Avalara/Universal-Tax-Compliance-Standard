@@ -13,7 +13,7 @@
     "document_type": {
       "type": "string",
       "description": "Transaction type. Providers MUST reject unrecognized values with UTCS-3002.",
-      "enum": ["sale", "return", "purchase_order", "inventory_transfer", "reverse_charge", "customs", "void"]
+      "enum": ["sale", "return", "purchase_order", "inventory_transfer", "void"]
     },
     "document_code": {
       "type": "string",
@@ -21,7 +21,7 @@
     },
     "company_code": {
       "type": "string",
-      "description": "Identifier of the selling entity (company) the transaction belongs to. Routes the transaction to the correct registered entity within the provider account, which determines nexus, registration, and where the tax is reported. Distinct from business_identification_no, which is that entity's tax registration number."
+      "description": "Identifier of the selling entity (company) the transaction belongs to. Routes the transaction to the correct registered entity within the provider account, which determines nexus, registration, and where the tax is reported."
     },
     "transaction_date": {
       "type": "string",
@@ -46,33 +46,11 @@
     },
     "customer": {
       "type": "object",
-      "description": "Customer details including identifiers, entity type, tax IDs, and exemption credentials.",
+      "description": "Customer details including identifiers and exemption credentials.",
       "properties": {
         "customer_code": {
           "type": "string",
           "description": "Unique customer identifier in the caller's system."
-        },
-        "tax_registration_ids": {
-          "type": "array",
-          "description": "Customer's tax registration numbers (VAT IDs, GST numbers, etc.).",
-          "items": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "description": "Type of registration (e.g., vat, gst, ein, sst)."
-              },
-              "value": {
-                "type": "string",
-                "description": "The registration number."
-              },
-              "jurisdiction": {
-                "type": "string",
-                "description": "Jurisdiction the registration applies to."
-              }
-            },
-            "required": ["type", "value"]
-          }
         },
         "exemption_certificate_id": {
           "type": "string",
@@ -81,7 +59,7 @@
         "entity_use_code": {
           "type": "string",
           "description": "Entity/use-based exemption reason asserting the buyer is exempt by status or intended use (e.g., government, charitable, resale), independent of a certificate on file. Applies to the whole transaction unless a line overrides it. Uses the same controlled vocabulary as the result exemption_reason. A certificate, when present, is supplied via exemption_certificate_id.",
-          "enum": ["resale", "government", "charitable_nonprofit", "religious_educational", "agricultural_production", "industrial_production", "direct_pay", "direct_mail", "foreign_diplomat", "export", "intra_community_supply", "other"]
+          "enum": ["resale", "government", "charitable_nonprofit", "religious_educational", "agricultural_production", "industrial_production", "direct_pay", "direct_mail", "foreign_diplomat", "export", "other"]
         }
       }
     },
@@ -108,14 +86,6 @@
         "point_of_order_origin": {
           "$ref": "common/address.schema.json",
           "description": "Where the order originated. Relevant for US tangible personal property sourcing."
-        },
-        "goods_place_or_service_rendered": {
-          "$ref": "common/address.schema.json",
-          "description": "Place of supply for VAT transactions."
-        },
-        "import": {
-          "$ref": "common/address.schema.json",
-          "description": "Import address for VAT import scenarios."
         },
         "bill_to": {
           "$ref": "common/address.schema.json",
@@ -165,17 +135,13 @@
       "required": ["facilitated", "liable_party"],
       "additionalProperties": false
     },
-    "business_identification_no": {
-      "type": "string",
-      "description": "The selling entity's VAT/GST tax registration number. REQUIRED for B2B transactions in VAT/GST jurisdictions. Determines reverse charge applicability and zero-rating eligibility. For routing to the selling entity, use company_code."
-    },
     "reference_code": {
       "type": "string",
       "description": "Optional reference to a related document or external system. When document_type is return and this is the original transaction's document_code, the provider MUST reverse the original tax for the returned portion and MUST NOT recalculate it at current rates. When that document cannot be found, the provider returns UTCS-6002. On any other document type this is an audit cross-reference and does not change the calculation."
     },
     "purchase_order_number": {
       "type": "string",
-      "description": "Buyer's purchase order number. Optional. Carried for audit and e-invoicing; does not affect tax determination."
+      "description": "Buyer's purchase order number. Optional. Carried for audit; does not affect tax determination."
     },
     "exchange_rate": {
       "type": "number",
@@ -187,15 +153,6 @@
       "type": "string",
       "description": "ISO 4217 three-character reporting currency code. REQUIRED when exchange_rate is provided.",
       "pattern": "^[A-Z]{3}$"
-    },
-    "delivery_terms": {
-      "type": "string",
-      "description": "Incoterms (ICC Incoterms 2020) governing delivery. For cross-border transactions this determines which party bears import tax and duty: DDP places import VAT/GST and duty on the seller; other terms place them on the buyer as importer of record.",
-      "enum": ["EXW", "FCA", "CPT", "CIP", "DAP", "DPU", "DDP", "FAS", "FOB", "CFR", "CIF"]
-    },
-    "is_seller_importer_of_record": {
-      "type": "boolean",
-      "description": "For cross-border transactions, true when the seller acts as the importer of record and is therefore liable for import taxes and duties. When omitted, the provider infers liability from delivery_terms."
     },
     "tax_override": {
       "type": "object",

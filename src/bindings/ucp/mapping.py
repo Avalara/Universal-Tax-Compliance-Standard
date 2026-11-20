@@ -1,3 +1,6 @@
+# Copyright 2026 Avalara, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """Translate a UCP checkout tax call into a UTCS TransactionContext and back."""
 
 from __future__ import annotations

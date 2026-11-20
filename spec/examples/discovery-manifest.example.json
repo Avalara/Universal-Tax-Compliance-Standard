@@ -75,11 +75,6 @@
       "id": "us-sst",
       "version": "2025.1",
       "specification_url": "https://www.streamlinedsalestax.org/"
-    },
-    {
-      "id": "en16931",
-      "version": "2017-A1",
-      "specification_url": "https://docs.peppol.eu/poacc/billing/3.0/"
     }
   ],
   "certification": {

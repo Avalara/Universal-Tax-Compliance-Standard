@@ -2,7 +2,7 @@
 
 This flower-shop server is the official Python merchant sample with one hook added: while a checkout is open it asks the UTCS UCP binding for tax, and on completion it commits that result before the order is stored. The binding itself stays in [`src/bindings/ucp`](../../../bindings/ucp) and [`src/examples/ucp/mock`](../mock). Copy this behavior into another merchant. The flower-shop store, catalog, and payment handlers are not part of the hook.
 
-Upstream of the unmodified sample: [Universal-Commerce-Protocol/samples](https://github.com/Universal-Commerce-Protocol/samples) `rest/python/server`. This tree also carries the capability-negotiation code from the local `schema-update` checkout (`d0ecb28`). `ucp-sdk` 0.4.6 is installed from PyPI by `uv sync`.
+Upstream of the unmodified sample: [Universal-Commerce-Protocol/samples](https://github.com/Universal-Commerce-Protocol/samples) `rest/python/server`. This tree also carries capability-negotiation code that isn't in the upstream sample yet. `ucp-sdk` 0.4.6 is installed from PyPI by `uv sync`.
 
 ## What any merchant does
 

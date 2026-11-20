@@ -41,8 +41,8 @@ tags:
     description: "Core tier capabilities (MUST implement): tax-determination, jurisdiction-resolution"
   - name: Standard
     description: "Standard tier capabilities (SHOULD implement): product-classification, exemption-validation, compliance-documents"
-  - name: Advanced
-    description: "Advanced tier capabilities (MAY implement): cross-border, filing-obligations"
+  - name: Experimental
+    description: "Published for trial. Conforming to envelope 1.0 does not require these operations, and a provider MUST NOT advertise them: cross-border, filing-obligations."
   - name: Discovery
     description: Provider discovery and capability advertisement
 
@@ -126,7 +126,6 @@ paths:
                   currency_code: USD
                   commit: true
                   entity_type: b2b
-                  business_identification_no: "US-EIN-12-3456789"
                   customer:
                     customer_code: "CUST-0042"
                     exemption_certificate_id: "CERT-WA-2026-001"
@@ -580,10 +579,13 @@ paths:
   /cross-border/calculate:
     post:
       operationId: calculateDuties
-      tags: [Advanced]
+      tags: [Experimental]
+      x-utcs-status: experimental
       summary: Calculate cross-border duties and tariffs
       description: |
-        Advanced capability: cross-border@1.0
+        Experimental. Not part of envelope 1.0 conformance. A provider MUST NOT advertise cross-border.
+
+        Design for trial: cross-border@1.0
 
         Handles the full complexity of international transactions: customs duty calculation,
         landed cost estimation, VAT/GST determination, de minimis threshold awareness,
@@ -637,7 +639,7 @@ paths:
                       quantity: 2
                       amount: "300.00"
                       item_code: "WIDGET-BLUE"
-                      hs_code: "8543.70"
+                      description: "Electrical machines and apparatus, HS 8543.70"
       responses:
         "200":
           description: Duties and tariffs calculated
@@ -713,10 +715,13 @@ paths:
   /obligations:
     get:
       operationId: getFilingObligations
-      tags: [Advanced]
+      tags: [Experimental]
+      x-utcs-status: experimental
       summary: Check filing obligations
       description: |
-        Advanced capability: filing-obligations@1.0
+        Experimental. Not part of envelope 1.0 conformance. A provider MUST NOT advertise filing-obligations.
+
+        Design for trial: filing-obligations@1.0
 
         Track nexus accumulation, economic nexus threshold monitoring, and filing
         requirement awareness across jurisdictions.
@@ -884,14 +889,12 @@ components:
           type: boolean
           default: false
           description: If true, the transaction-level discount is allocated to this line.
-        hs_code:
-          type: string
         revenue_account:
           type: string
         entity_use_code:
           type: string
           description: Per-line entity/use-based exemption reason, overriding the customer-level value. Same vocabulary as the result exemption_reason.
-          enum: [resale, government, charitable_nonprofit, religious_educational, agricultural_production, industrial_production, direct_pay, direct_mail, foreign_diplomat, export, intra_community_supply, other]
+          enum: [resale, government, charitable_nonprofit, religious_educational, agricultural_production, industrial_production, direct_pay, direct_mail, foreign_diplomat, export, other]
         exemption_certificate_id:
           type: string
           description: Per-line exemption certificate identifier, overriding the customer-level value for this line. The provider applies it or rejects the request with a UTCS-5xxx error. It is never ignored. Validation alone does not apply it.
@@ -950,7 +953,7 @@ components:
         tax_type:
           type: string
           description: Provider-derived OUTPUT determined from origin, destination, entity type, date, and nexus. Never supplied by the caller.
-          enum: [sales_tax, sellers_use, consumer_use, use_tax, vat, gst, excise, duty, environmental_fee]
+          enum: [sales_tax, sellers_use, consumer_use, use_tax, excise, environmental_fee]
         tax_category:
           type: string
           description: Taxability treatment as a UN/EDIFACT 5305 (UNCL5305) category code. Provider-derived OUTPUT. Maps to UBL cac:TaxCategory/cbc:ID.
@@ -989,8 +992,8 @@ components:
                   type: string
                 exemption_reason:
                   type: string
-                  description: Controlled reason the exemption was granted. Aligned to the SSTGB Form F0003 reason categories and extended for cross-border use.
-                  enum: [resale, government, charitable_nonprofit, religious_educational, agricultural_production, industrial_production, direct_pay, direct_mail, foreign_diplomat, export, intra_community_supply, other]
+                  description: Controlled reason the exemption was granted. Aligned to the SSTGB Form F0003 reason categories.
+                  enum: [resale, government, charitable_nonprofit, religious_educational, agricultural_production, industrial_production, direct_pay, direct_mail, foreign_diplomat, export, other]
                 exemption_type:
                   type: string
                   description: Optional provider-specific refinement of exemption_reason (free text).
@@ -1129,13 +1132,13 @@ components:
           default: utcs-standard
         document_type:
           type: string
-          enum: [sale, return, purchase_order, inventory_transfer, reverse_charge, customs, void]
+          enum: [sale, return, purchase_order, inventory_transfer, void]
         document_code:
           type: string
           description: The caller's key for this transaction when the caller sends one. Optional. A caller SHOULD send it when commit is true, because UTCS-6001 rejects a repeated commit of that code and without it a retry is a new document. When omitted, the provider may generate a document_code. The Tax Result always returns one, the caller's value if sent, otherwise the generated value.
         company_code:
           type: string
-          description: Identifier of the selling entity the transaction belongs to. Routes to the correct registered entity (nexus, registration, reporting). Distinct from business_identification_no.
+          description: Identifier of the selling entity the transaction belongs to. Routes to the correct registered entity (nexus, registration, reporting).
         transaction_date:
           type: string
           format: date-time
@@ -1152,25 +1155,13 @@ components:
           properties:
             customer_code:
               type: string
-            tax_registration_ids:
-              type: array
-              items:
-                type: object
-                properties:
-                  type:
-                    type: string
-                  value:
-                    type: string
-                  jurisdiction:
-                    type: string
-                required: [type, value]
             exemption_certificate_id:
               type: string
               description: Reference to an exemption certificate on file. The provider applies it or rejects the request with UTCS-5001, UTCS-5002, UTCS-5003, or UTCS-5004. It is never ignored. A prior successful validation does not apply it.
             entity_use_code:
               type: string
               description: Entity/use-based exemption reason asserting the buyer is exempt by status or intended use, independent of a certificate. Same vocabulary as the result exemption_reason.
-              enum: [resale, government, charitable_nonprofit, religious_educational, agricultural_production, industrial_production, direct_pay, direct_mail, foreign_diplomat, export, intra_community_supply, other]
+              enum: [resale, government, charitable_nonprofit, religious_educational, agricultural_production, industrial_production, direct_pay, direct_mail, foreign_diplomat, export, other]
         addresses:
           type: object
           properties:
@@ -1183,10 +1174,6 @@ components:
             point_of_order_acceptance:
               $ref: "#/components/schemas/Address"
             point_of_order_origin:
-              $ref: "#/components/schemas/Address"
-            goods_place_or_service_rendered:
-              $ref: "#/components/schemas/Address"
-            import:
               $ref: "#/components/schemas/Address"
             bill_to:
               $ref: "#/components/schemas/Address"
@@ -1214,9 +1201,6 @@ components:
             facilitator_id:
               type: string
           required: [facilitated, liable_party]
-        business_identification_no:
-          type: string
-          description: The selling entity's VAT/GST tax registration number. For routing to the selling entity, use company_code.
         reference_code:
           type: string
           description: Optional reference to a related document or external system. When document_type is return and this is the original transaction's document_code, the provider reverses the original tax for the returned portion and does not recalculate it at current rates. If that document cannot be found, the provider returns UTCS-6002. On any other document type this is an audit cross-reference and does not change the calculation.
@@ -1230,13 +1214,6 @@ components:
         exchange_rate_currency_code:
           type: string
           pattern: "^[A-Z]{3}$"
-        delivery_terms:
-          type: string
-          description: Incoterms (ICC Incoterms 2020). For cross-border, DDP places import VAT/GST and duty on the seller; other terms place them on the buyer as importer of record.
-          enum: [EXW, FCA, CPT, CIP, DAP, DPU, DDP, FAS, FOB, CFR, CIF]
-        is_seller_importer_of_record:
-          type: boolean
-          description: For cross-border, true when the seller is the importer of record and liable for import taxes and duties. When omitted, inferred from delivery_terms.
         tax_override:
           type: object
           properties:
@@ -1376,7 +1353,7 @@ components:
                 type: string
               tax_type:
                 type: string
-                enum: [sales_tax, sellers_use, consumer_use, use_tax, vat, gst, excise, duty, environmental_fee]
+                enum: [sales_tax, sellers_use, consumer_use, use_tax, excise, environmental_fee]
               taxable_amount:
                 type: string
                 pattern: "^-?\\d+(\\.\\d+)?$"
@@ -1388,7 +1365,7 @@ components:
           $ref: "#/components/schemas/Attestation"
         conformance:
           type: array
-          description: "Conformance profiles the provider applied when producing this result (OUTPUT annotation). Declared in the provider manifest under conformance_profiles; never supplied by the caller. Example: a US sale returns [{id: us-sst}]; an EU invoice returns [{id: en16931}]."
+          description: "Conformance profiles the provider applied when producing this result (OUTPUT annotation). Declared in the provider manifest under conformance_profiles; never supplied by the caller. A US sale returns [{id: us-sst}]."
           items:
             type: object
             properties:
@@ -1492,10 +1469,11 @@ components:
                 type: string
       required: [document_id, document_code, result_id, created_at, status, tax_result]
 
+
     # -- Cross-border --
     CrossBorderRequest:
       type: object
-      description: Cross-border transaction request extending Transaction Context with trade-specific fields
+      description: Experimental. Extends Transaction Context with trade-specific fields. Line items may carry hs_code. Not part of envelope 1.0 conformance.
       allOf:
         - $ref: "#/components/schemas/TransactionContext"
         - type: object
@@ -1508,6 +1486,13 @@ components:
               type: string
               description: ICC Incoterms 2020 delivery terms
               enum: [DAP, DDP, FOB, FCA, EXW, CIF, CFR, CPT, CIP, FAS, DPU]
+            delivery_terms:
+              type: string
+              description: Incoterms (ICC Incoterms 2020). DDP places import VAT/GST and duty on the seller; other terms place them on the buyer as importer of record.
+              enum: [EXW, FCA, CPT, CIP, DAP, DPU, DDP, FAS, FOB, CFR, CIF]
+            is_seller_importer_of_record:
+              type: boolean
+              description: True when the seller is the importer of record and liable for import taxes and duties. When omitted, inferred from delivery_terms.
             importer_of_record:
               type: object
               properties:
@@ -1527,9 +1512,12 @@ components:
 
     CrossBorderResult:
       type: object
+      description: Experimental result. Not part of envelope 1.0 conformance.
       properties:
         tax_result:
-          $ref: "#/components/schemas/TaxResult"
+          type: object
+          additionalProperties: true
+          description: Follows the shape of TaxResult. tax_type may be vat, gst, or duty in addition to the envelope 1.0 values. Envelope 1.0 tax determination does not return those types.
         duties:
           type: array
           items:
@@ -1637,12 +1625,13 @@ components:
                 enum: [active, approaching_threshold, below_threshold, new]
             required: [jurisdiction_code, jurisdiction_name, status]
       required: [obligations]
-# -- Webhook schemas --
 webhooks:
+  # Experimental. Not part of envelope 1.0 conformance. Checkout receives the tax result on the determination response.
   taxCommitted:
     post:
       summary: Tax determination committed
       operationId: onTaxCommitted
+      x-utcs-status: experimental
       requestBody:
         required: true
         content:
@@ -1657,6 +1646,7 @@ webhooks:
     post:
       summary: Compliance document created
       operationId: onDocumentGenerated
+      x-utcs-status: experimental
       requestBody:
         required: true
         content:
@@ -1671,6 +1661,7 @@ webhooks:
     post:
       summary: Approaching nexus threshold
       operationId: onObligationThresholdWarning
+      x-utcs-status: experimental
       requestBody:
         required: true
         content:
@@ -1685,6 +1676,7 @@ webhooks:
     post:
       summary: Nexus threshold exceeded
       operationId: onObligationThresholdCrossed
+      x-utcs-status: experimental
       requestBody:
         required: true
         content:

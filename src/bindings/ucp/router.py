@@ -1,3 +1,6 @@
+# Copyright 2026 Avalara, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """UCP routes for the tax binding. Storage stays with the injected determine function."""
 
 from __future__ import annotations

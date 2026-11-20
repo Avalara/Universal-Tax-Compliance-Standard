@@ -109,12 +109,7 @@ The accuracy-over-availability rule holds. A determination failure becomes an er
 
 ## 9. Deferred capabilities
 
-The checkout-shaped binding covers tax determination, classification, and exemption validation. The following UTCS capabilities are not cart-shaped and are out of scope for the shopping extension. They are proposed as a future standalone `dev.ucp.tax.*` service:
-
-- `compliance-documents`
-- `elr-reporting`
-- `filing-obligations`
-- standalone `jurisdiction-resolution`, `product-classification`, and `cross-border` outside a checkout
+The checkout-shaped binding covers tax determination, classification, and exemption validation for US sales and use tax. `compliance-documents` is a UTCS capability in envelope 1.0 and is not cart-shaped, so it is out of scope for the shopping extension. `elr-reporting`, `filing-obligations`, and `cross-border` are reserved names and are not capabilities in envelope 1.0. The last two are published as Experimental on the core REST binding and stay out of this checkout binding. A future standalone `dev.ucp.tax.*` service is where a later version would carry documents, e-invoicing, filing obligations, and cross-border work.
 
 ## 10. Scope
 

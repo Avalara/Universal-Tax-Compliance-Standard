@@ -18,6 +18,3 @@ Thumbs.db
 *.swp
 .idea/
 .vscode/
-
-# OneDrive conflicted-copy artifacts
-*-*conflict*

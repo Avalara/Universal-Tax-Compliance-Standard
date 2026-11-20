@@ -27,7 +27,7 @@
     "tax_type": {
       "type": "string",
       "description": "Type of tax levied. Provider-derived OUTPUT determined from origin, destination, entity type, date, and nexus. Never supplied by the caller. Maps to the UBL cac:TaxScheme/cbc:ID (UNCL5153) when emitting e-invoices.",
-      "enum": ["sales_tax", "sellers_use", "consumer_use", "use_tax", "vat", "gst", "excise", "duty", "environmental_fee"]
+      "enum": ["sales_tax", "sellers_use", "consumer_use", "use_tax", "excise", "environmental_fee"]
     },
     "tax_category": {
       "type": "string",
@@ -81,7 +81,7 @@
             },
             "exemption_reason": {
               "type": "string",
-              "description": "Controlled reason the exemption was granted. Aligned to the SSTGB Uniform Sales and Use Tax Exemption/Resale Certificate (Form F0003) reason categories and extended for cross-border use. Conformance profiles MAY narrow this list.",
+              "description": "Controlled reason the exemption was granted. Aligned to the SSTGB Uniform Sales and Use Tax Exemption/Resale Certificate (Form F0003) reason categories. Conformance profiles MAY narrow this list.",
               "enum": [
                 "resale",
                 "government",
@@ -93,7 +93,6 @@
                 "direct_mail",
                 "foreign_diplomat",
                 "export",
-                "intra_community_supply",
                 "other"
               ]
             },

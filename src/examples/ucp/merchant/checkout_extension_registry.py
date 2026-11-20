@@ -100,7 +100,7 @@ def merge_discovery_capabilities(
 def load_default_extensions() -> None:
   """Register built-in extensions at startup.
 
-  Registers the Avalara checkout tax preview extension when running the
+  Registers the checkout tax preview extension when running the
   companion service (see ``--checkout_tax_extension_url``). ``spec`` points at
   the extension's UCP discovery document (``/.well-known/ucp``); ``schema``
   references its OpenAPI definition.

@@ -6,7 +6,7 @@
   "tools": [
     {
       "name": "utcs_determine_tax",
-      "description": "Calculate tax for a commerce transaction. Given items, addresses, entity type, and transaction type, returns applicable taxes with full jurisdiction breakdown and provider attestation. When commit=true, the provider records the transaction as final; when commit=false, the result is an estimate. Supports B2C, B2B, and B2G transactions across all jurisdictions. This is the foundational UTCS capability — every other capability supports or extends tax determination. Returns structured UTCS error codes with recovery hints if tax cannot be accurately determined; never returns approximate values.",
+      "description": "Calculate US sales and use tax for a checkout transaction, B2C and B2B alike. Given items, addresses, entity type, and transaction type, returns applicable taxes with full jurisdiction breakdown and provider attestation. When commit=true, the provider records the transaction as final; when commit=false, the result is an estimate. This is the foundational UTCS capability — every other capability supports or extends tax determination. Returns structured UTCS error codes with recovery hints if tax cannot be accurately determined; never returns approximate values.",
       "capability": "tax-determination@1.0",
       "tier": "core",
       "inputSchema": {
@@ -15,7 +15,7 @@
           "document_type": {
             "type": "string",
             "description": "Transaction type",
-            "enum": ["sale", "return", "purchase_order", "inventory_transfer", "reverse_charge", "customs", "void"]
+            "enum": ["sale", "return", "purchase_order", "inventory_transfer", "void"]
           },
           "document_code": {
             "type": "string",
@@ -23,7 +23,7 @@
           },
           "company_code": {
             "type": "string",
-            "description": "Identifier of the selling entity the transaction belongs to. Routes to the correct registered entity (nexus, registration, reporting). Distinct from business_identification_no."
+            "description": "Identifier of the selling entity the transaction belongs to. Routes to the correct registered entity (nexus, registration, reporting)."
           },
           "transaction_date": {
             "type": "string",
@@ -44,21 +44,9 @@
           },
           "customer": {
             "type": "object",
-            "description": "Customer details including identifiers, tax registrations, and exemption credentials",
+            "description": "Customer details including identifiers and exemption credentials",
             "properties": {
               "customer_code": { "type": "string" },
-              "tax_registration_ids": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "type": { "type": "string" },
-                    "value": { "type": "string" },
-                    "jurisdiction": { "type": "string" }
-                  },
-                  "required": ["type", "value"]
-                }
-              },
               "exemption_certificate_id": {
                 "type": "string",
                 "description": "Exemption certificate on file. The provider MUST apply it or reject the request with UTCS-5001, UTCS-5002, UTCS-5003, or UTCS-5004. It MUST NOT be ignored. A prior successful validation does not apply it."
@@ -66,7 +54,7 @@
               "entity_use_code": {
                 "type": "string",
                 "description": "Entity/use-based exemption reason (buyer exempt by status or use), independent of a certificate.",
-                "enum": ["resale", "government", "charitable_nonprofit", "religious_educational", "agricultural_production", "industrial_production", "direct_pay", "direct_mail", "foreign_diplomat", "export", "intra_community_supply", "other"]
+                "enum": ["resale", "government", "charitable_nonprofit", "religious_educational", "agricultural_production", "industrial_production", "direct_pay", "direct_mail", "foreign_diplomat", "export", "other"]
               }
             }
           },
@@ -79,8 +67,6 @@
               "single_location": { "$ref": "#/$defs/Address" },
               "point_of_order_acceptance": { "$ref": "#/$defs/Address" },
               "point_of_order_origin": { "$ref": "#/$defs/Address" },
-              "goods_place_or_service_rendered": { "$ref": "#/$defs/Address" },
-              "import": { "$ref": "#/$defs/Address" },
               "bill_to": {
                 "$ref": "#/$defs/Address",
                 "description": "Customer's billing address. Used where sourcing looks at bill-to, including California SB 122 (effective 1 January 2027), which sources SaaS and prewritten software by billing address first. Does not satisfy ship_to. A caller with only a billing address sends that same address as both bill_to and ship_to."
@@ -107,10 +93,6 @@
             },
             "required": ["facilitated", "liable_party"]
           },
-          "business_identification_no": {
-            "type": "string",
-            "description": "The selling entity's VAT/GST tax registration number. Required for B2B in VAT/GST jurisdictions. For routing to the selling entity, use company_code."
-          },
           "reference_code": {
             "type": "string",
             "description": "Optional reference to a related document or external system. When document_type is return and this is the original transaction's document_code, the provider MUST reverse the original tax for the returned portion and MUST NOT recalculate it at current rates. If that document cannot be found, the provider returns UTCS-6002. On any other document type this is an audit cross-reference and does not change the calculation."
@@ -118,15 +100,6 @@
           "purchase_order_number": {
             "type": "string",
             "description": "Buyer's purchase order number. Optional; does not affect tax determination."
-          },
-          "delivery_terms": {
-            "type": "string",
-            "description": "Incoterms (ICC Incoterms 2020). For cross-border, DDP places import VAT/GST and duty on the seller; other terms place them on the buyer as importer of record.",
-            "enum": ["EXW", "FCA", "CPT", "CIP", "DAP", "DPU", "DDP", "FAS", "FOB", "CFR", "CIF"]
-          },
-          "is_seller_importer_of_record": {
-            "type": "boolean",
-            "description": "For cross-border, true when the seller is the importer of record and liable for import taxes and duties. When omitted, inferred from delivery_terms."
           },
           "tax_override": {
             "type": "object",
@@ -210,12 +183,11 @@
               "tax_code": { "type": "string" },
               "tax_included": { "type": "boolean", "default": false },
               "discounted": { "type": "boolean", "default": false, "description": "If true, the transaction-level discount is allocated to this line." },
-              "hs_code": { "type": "string" },
               "revenue_account": { "type": "string" },
               "entity_use_code": {
                 "type": "string",
                 "description": "Per-line entity/use-based exemption reason, overriding the customer-level value.",
-                "enum": ["resale", "government", "charitable_nonprofit", "religious_educational", "agricultural_production", "industrial_production", "direct_pay", "direct_mail", "foreign_diplomat", "export", "intra_community_supply", "other"]
+                "enum": ["resale", "government", "charitable_nonprofit", "religious_educational", "agricultural_production", "industrial_production", "direct_pay", "direct_mail", "foreign_diplomat", "export", "other"]
               },
               "exemption_certificate_id": {
                 "type": "string",
@@ -362,9 +334,10 @@
     },
     {
       "name": "utcs_calculate_duties",
-      "description": "Calculate cross-border duties and tariffs for international transactions. Handles customs duty calculation, landed cost estimation, VAT/GST determination, de minimis threshold awareness, country-of-origin rules, HS classification, Incoterms (DAP, DDP, FOB, FCA, EXW, etc.), and importer of record designation.",
+      "description": "Experimental. Not part of envelope 1.0 conformance. Calculate cross-border duties and tariffs for international transactions. Handles customs duty calculation, landed cost estimation, VAT/GST determination, de minimis threshold awareness, country-of-origin rules, HS classification, Incoterms (DAP, DDP, FOB, FCA, EXW, etc.), and importer of record designation.",
       "capability": "cross-border@1.0",
       "tier": "advanced",
+      "status": "experimental",
       "dependencies": ["tax-determination", "product-classification"],
       "inputSchema": {
         "type": "object",
@@ -426,9 +399,10 @@
     },
     {
       "name": "utcs_check_obligations",
-      "description": "Check filing obligations across jurisdictions. Returns nexus accumulation status, economic nexus threshold monitoring, and filing requirement awareness. Helps merchants understand where they are accumulating obligations and what filing requirements are being created as agents transact across jurisdictions.",
+      "description": "Experimental. Not part of envelope 1.0 conformance. Check filing obligations across jurisdictions. Returns nexus accumulation status, economic nexus threshold monitoring, and filing requirement awareness. Helps merchants understand where they are accumulating obligations and what filing requirements are being created as agents transact across jurisdictions.",
       "capability": "filing-obligations@1.0",
       "tier": "advanced",
+      "status": "experimental",
       "dependencies": ["tax-determination", "jurisdiction-resolution"],
       "inputSchema": {
         "type": "object",

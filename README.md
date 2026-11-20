@@ -24,10 +24,10 @@ Avalara, Inc. Licensed under the Apache License, Version 2.0. See
 An implementation of the specification does not depend on any document outside `spec/`. The file-by-file index is [`spec/README.md`](spec/README.md).
 
 - **Prose** — [`spec/SPECIFICATION.md`](spec/SPECIFICATION.md) defines conformance, the data model, errors, security, governance, and versioning. [`spec/STATUS.md`](spec/STATUS.md) records maturity. [`spec/ROADMAP.md`](spec/ROADMAP.md) records what is still open.
-- **Schemas** — JSON Schema 2020-12 for the transaction context, tax result, discovery manifest, resolve, classify, and exemption bodies, four webhook payloads, and shared types.
+- **Schemas** — JSON Schema 2020-12 for the transaction context, tax result, discovery manifest, resolve, classify, and exemption bodies, and shared types.
 - **OpenAPI** — `spec/openapi/utcs-v1.yaml`, the REST transport binding. Paths are relative to `https://{provider}/utcs/v1`.
-- **MCP** — `spec/mcp/utcs-mcp-tools.json`, 7 tool definitions.
-- **Profiles / mappings / bindings** — US Streamlined Sales Tax profile, UBL mapping, and the Universal Commerce Protocol binding.
+- **MCP** — `spec/mcp/utcs-mcp-tools.json`, 5 v1.0 tools and 2 Experimental tools.
+- **Profiles / mappings / bindings** — US Streamlined Sales Tax profile and the Universal Commerce Protocol binding. UBL is a later-version sketch under `spec/mappings/`.
 - **Examples** — request and response payloads. They use a neutral provider. The informative UCP implementation in this repository is listed in [`spec/IMPLEMENTATIONS.md`](spec/IMPLEMENTATIONS.md).
 
 ## Validate

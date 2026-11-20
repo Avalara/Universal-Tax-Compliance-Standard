@@ -41,10 +41,6 @@
       "description": "If true, the transaction-level discount is allocated to this line. Providers allocate the document discount only across lines flagged discounted. Default: false.",
       "default": false
     },
-    "hs_code": {
-      "type": "string",
-      "description": "Harmonized System (HS) tariff code. REQUIRED when cross-border@1.0 capability is invoked."
-    },
     "revenue_account": {
       "type": "string",
       "description": "GL account code. Some jurisdictions have account-based taxability rules."
@@ -52,7 +48,7 @@
     "entity_use_code": {
       "type": "string",
       "description": "Per-line entity/use-based exemption reason, overriding the customer-level entity_use_code for this line. Asserts the line is exempt by buyer status or intended use rather than a certificate. Same controlled vocabulary as the result exemption_reason.",
-      "enum": ["resale", "government", "charitable_nonprofit", "religious_educational", "agricultural_production", "industrial_production", "direct_pay", "direct_mail", "foreign_diplomat", "export", "intra_community_supply", "other"]
+      "enum": ["resale", "government", "charitable_nonprofit", "religious_educational", "agricultural_production", "industrial_production", "direct_pay", "direct_mail", "foreign_diplomat", "export", "other"]
     },
     "exemption_certificate_id": {
       "type": "string",

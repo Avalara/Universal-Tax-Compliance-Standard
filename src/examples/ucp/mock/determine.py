@@ -1,3 +1,6 @@
+# Copyright 2026 Avalara, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """Wire the mock provider and compliance record to the UCP binding."""
 
 from __future__ import annotations

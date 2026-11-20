@@ -22,7 +22,7 @@
             "type": "array",
             "items": {
               "type": "string",
-              "enum": ["sales_tax", "use_tax", "vat", "gst", "excise", "duty", "environmental_fee"]
+              "enum": ["sales_tax", "use_tax", "excise", "environmental_fee"]
             }
           },
           "parent_jurisdiction_code": {

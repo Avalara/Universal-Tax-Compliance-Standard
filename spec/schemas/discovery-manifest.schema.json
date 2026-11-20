@@ -54,9 +54,7 @@
               "jurisdiction-resolution",
               "product-classification",
               "exemption-validation",
-              "compliance-documents",
-              "cross-border",
-              "filing-obligations"
+              "compliance-documents"
             ]
           },
           "version": {
@@ -105,7 +103,7 @@
         "properties": {
           "type": {
             "type": "string",
-            "description": "Transport binding type. rest, mcp, and webhook have published bindings in this version. a2a is a reserved value: a provider MUST NOT advertise it until a binding is published. No A2A binding is published in this version.",
+            "description": "Transport binding type. rest and mcp are part of envelope 1.0. webhook is published as Experimental and a provider MUST NOT advertise it. a2a is reserved and a provider MUST NOT advertise it. No A2A binding is published in this version.",
             "enum": ["rest", "mcp", "a2a", "webhook"]
           },
           "base_url": {
@@ -122,11 +120,6 @@
             "type": "string",
             "description": "MCP tool name prefix. Default: 'utcs_'.",
             "default": "utcs_"
-          },
-          "webhook_registration_url": {
-            "type": "string",
-            "format": "uri",
-            "description": "URL for registering webhook callbacks. Required when type is 'webhook'."
           }
         },
         "required": ["type"]
@@ -219,7 +212,7 @@
           "id": {
             "type": "string",
             "description": "Conformance profile identifier.",
-            "examples": ["us-sst", "en16931", "peppol-bis-billing-3"]
+            "examples": ["us-sst"]
           },
           "version": {
             "type": "string",
@@ -250,9 +243,7 @@
                   "core_compliance",
                   "product_classification",
                   "exemption_management",
-                  "compliance_documents",
-                  "cross_border_commerce",
-                  "filing_obligations"
+                  "compliance_documents"
                 ]
               },
               "tier": {

@@ -1,3 +1,6 @@
+# Copyright 2026 Avalara, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """Flat-rate determination provider. Checkout and UCP stay outside this module."""
 
 from __future__ import annotations

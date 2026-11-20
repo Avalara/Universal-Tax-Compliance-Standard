@@ -1,10 +1,10 @@
 # UTCS to UBL Mapping
 
-**Status:** Draft v0.1
-**Applies to:** UTCS v1.0 core (`../schemas/`)
+**Status:** Not part of envelope 1.0
+**Applies to:** a later version that covers e-invoicing
 **Target:** OASIS Universal Business Language (UBL) 2.x, with notes for EN 16931 and Peppol BIS Billing 3.0
 
-This document maps the UTCS canonical Tax Result onto the UBL tax model, and defines how UTCS renders a UBL Invoice or Credit Note for the `compliance-documents` capability. It is informative for the calculation contract and normative for any UTCS-emitted UBL document.
+This document is a sketch of how a later version could map a Tax Result onto the UBL tax model. Envelope 1.0 does not include e-invoicing. The sketch is not normative for a v1.0 implementation. See [../ROADMAP.md](../ROADMAP.md).
 
 Requirement levels (MUST, SHOULD, MAY) follow RFC 2119.
 

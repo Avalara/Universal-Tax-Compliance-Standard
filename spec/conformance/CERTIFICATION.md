@@ -14,7 +14,7 @@ This directory is the conformance suite for the artifacts in `spec/`. It is Expe
 - Compiles every MCP `inputSchema`, and rejects `negative/mcp-bad-tool.json`.
 - Checks that `registries/rest-operations.json`, the OpenAPI paths, and `examples/discovery-manifest.example.json` name the same operations. A manifest that advertises `/classify` or `/tax/void` fails here even though the manifest schema allows any path string. `negative/manifest-stale-paths.json` is that case.
 - Checks that the error-code enumeration, `registries/error-codes.json`, and [SPECIFICATION.md](../SPECIFICATION.md) list the same codes.
-- Checks that the four webhook schemas are the schemas the OpenAPI webhooks reference.
+- Checks that `POST /cross-border/calculate`, `GET /obligations`, and the four webhooks carry `x-utcs-status: experimental` and stay out of the v1.0 operation registry.
 - Checks that worked examples and the OpenAPI description stay provider-neutral, and that the UCP binding does not point at a private source host or claim an A2A binding.
 
 ## Certification
@@ -29,8 +29,6 @@ A **badge** in a discovery manifest is a claim that the provider has passed a de
 | `product_classification` | `product-classification` | `core_compliance` |
 | `exemption_management` | `exemption-validation` | `core_compliance` |
 | `compliance_documents` | `compliance-documents` | `core_compliance` |
-| `cross_border_commerce` | `cross-border` | `core_compliance` and `product_classification` |
-| `filing_obligations` | `filing-obligations` | `core_compliance` |
 
 No registry is operated for this version. Therefore:
 

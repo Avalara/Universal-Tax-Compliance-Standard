@@ -1,3 +1,6 @@
+# Copyright 2026 Avalara, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """ISO 4217 minor-unit conversion. Rates stay decimal strings."""
 
 from __future__ import annotations

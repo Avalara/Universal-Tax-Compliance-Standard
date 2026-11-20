@@ -1,3 +1,6 @@
+# Copyright 2026 Avalara, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """UCP binding for UTCS tax determination."""
 
 from bindings.ucp.errors import BindingError

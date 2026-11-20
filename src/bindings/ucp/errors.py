@@ -1,3 +1,6 @@
+# Copyright 2026 Avalara, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """Domain failures the UCP binding returns as messages."""
 
 from __future__ import annotations

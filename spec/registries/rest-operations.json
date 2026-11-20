@@ -7,8 +7,6 @@
     { "capability": "product-classification", "tier": "standard", "method": "POST", "path": "/tax-codes/classify", "operationId": "classifyProduct" },
     { "capability": "exemption-validation", "tier": "standard", "method": "POST", "path": "/exemptions/validate", "operationId": "validateExemption" },
     { "capability": "compliance-documents", "tier": "standard", "method": "GET", "path": "/documents/{document_id}", "operationId": "getComplianceDocument" },
-    { "capability": "compliance-documents", "tier": "standard", "method": "POST", "path": "/documents", "operationId": "generateComplianceDocument" },
-    { "capability": "cross-border", "tier": "advanced", "method": "POST", "path": "/cross-border/calculate", "operationId": "calculateDuties" },
-    { "capability": "filing-obligations", "tier": "advanced", "method": "GET", "path": "/obligations", "operationId": "getFilingObligations" }
+    { "capability": "compliance-documents", "tier": "standard", "method": "POST", "path": "/documents", "operationId": "generateComplianceDocument" }
   ]
 }

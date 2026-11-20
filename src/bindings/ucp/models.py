@@ -1,3 +1,6 @@
+# Copyright 2026 Avalara, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 """UTCS calculation models and the UCP tax wire."""
 
 from __future__ import annotations
