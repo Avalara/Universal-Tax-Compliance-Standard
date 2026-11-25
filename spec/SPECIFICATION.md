@@ -106,7 +106,7 @@ When a determination sets `customer.exemption_certificate_id` or a line `exempti
 
 `schemas/tax-result.schema.json` is the canonical output. A provider MUST return this structure for a successful determination. Jurisdiction, tax type, tax category, and `fee_basis` are provider outputs. The caller does not select them.
 
-`document_code` on the request is the caller's key when the caller sends one. It is optional. A caller SHOULD send it when `commit` is true. `UTCS-6001` rejects a repeated commit of that code, and without the caller's key a retry is a new document. When the caller omits it, the provider MAY generate a `document_code`. The Tax Result always includes `document_code`: the caller's value when one was sent, otherwise the generated value. It is not defined as an echo of a field the request may have omitted. `result_id` is the provider's own key for the result and MAY be the same value as `document_code`. `document_id` is not a member of the Tax Result. It exists only on a compliance document.
+`document_code` on the request is the caller's key when the caller sends one. It is optional. A caller SHOULD send it when `commit` is true: [section 3.6](#36-commit-replay) makes a repeated commit safe, and without the caller's key a retry is a new document. When the caller omits it, the provider MAY generate a `document_code`. The Tax Result always includes `document_code`: the caller's value when one was sent, otherwise the generated value. It is not defined as an echo of a field the request may have omitted. `result_id` is the provider's own key for the result and MAY be the same value as `document_code`. `document_id` is not a member of the Tax Result. It exists only on a compliance document.
 
 `fee_basis` has three values:
 
@@ -137,6 +137,27 @@ If a provider cannot determine tax accurately, it MUST return an error from the 
 ### 3.5 Attestation
 
 Every successful Tax Result MUST include the attestation block defined by `schemas/common/attestation.schema.json`. The attestation identifies the provider, the content version, the engine version, and the calculation time. A signature MAY be present. Trust levels are defined in section 6.
+
+### 3.6 Commit replay
+
+A caller that loses the response to a determination with `commit: true` cannot tell whether the document was recorded. The caller MUST be able to repeat the request without recording a second document. This section applies to a request with `commit: true` and a `document_code`, for every `document_type` except `void`. Without a `document_code` there is nothing to match, and a retry is a new document ([section 3.2](#32-tax-result)). A `void` request acts on the document its `document_code` names ([section 3.1](#31-transaction-context)) and is not a commit of a new document.
+
+When the provider already holds a document with that `document_code` in status `committed`, it MUST handle the request in one of two ways:
+
+| The request is | The provider MUST |
+|----------------|-------------------|
+| Equivalent to the request that committed the document | Return the original Tax Result unchanged and record nothing. `result_id`, `status`, every amount, and `attestation`, including `calculation_timestamp`, are those of the first response. This is a replay. It is a success, not an error. |
+| Not equivalent | Reject it with `UTCS-6001`. |
+
+These rules complete the table:
+
+- **Equivalence.** Two requests are equivalent when the Transaction Contexts the provider derives from them are equal as JSON values. Object member order and whitespace are not significant. For the `utcs-standard` input profile the Transaction Context is the request body. Equivalence is decided on the requests as received. A change to rates or provider content between the two requests does not make them different, and a replay MUST NOT be recalculated.
+- **Scope of the code.** A `document_code` is a key within the provider account and the `company_code`. The same code under a different `company_code` is a different document.
+- **Only while committed.** If the document has since been voided or adjusted, its status is no longer `committed`. A repeated commit is then not a replay, and the provider MUST reject it with `UTCS-6001`.
+- **Concurrent requests.** When equivalent requests arrive at the same time, the provider MUST record one document, and every one of those requests MUST receive that document's result.
+- **Retention.** The provider MUST keep what it needs to recognize and replay the request for as long as the committed document exists.
+- **Signal.** On REST the provider SHOULD set the response header `X-UTCS-Replayed: true`. The body is not altered, and no entry is added to `messages[]`, so a consumer reads a replay exactly as it reads a first response.
+- **Estimates.** A request with `commit: false` is never a replay, and it may be repeated freely.
 
 ---
 
@@ -171,7 +192,7 @@ The registry is also published as `registries/error-codes.json`. The schema enum
 | `UTCS-5002` | exemption | Exemption certificate expired |
 | `UTCS-5003` | exemption | Exemption not valid for the jurisdiction |
 | `UTCS-5004` | exemption | Exemption not valid for the product |
-| `UTCS-6001` | document | Document code already committed |
+| `UTCS-6001` | document | Document code already committed and the request is not a replay |
 | `UTCS-6002` | document | Document not found for void or adjustment |
 | `UTCS-7001` | cross_border | HS code classification failed. Reserved. `cross-border` is not a capability in this version. |
 | `UTCS-7002` | cross_border | Country of origin required but not provided. Reserved. `cross-border` is not a capability in this version. |

@@ -51,6 +51,8 @@ UTCS uses a `commit` flag to separate an estimate from a recorded transaction. U
 
 A preview never records a transaction. Completion records one.
 
+A platform that retries `complete_checkout` after a timeout reaches the provider as a repeated `commit: true` with the same `document_code`. The platform SHOULD resend the same `tax` input, including `tax.effective_at`, so the provider derives an equivalent Transaction Context and replays the original result ([SPECIFICATION.md section 3.6](../SPECIFICATION.md#36-commit-replay)).
+
 ## 5. Request mapping
 
 | UTCS `TransactionContext` | UCP `tax` input |
