@@ -74,7 +74,7 @@ Open: which HMAC algorithm and which key the consumer uses, and whether delivery
 These questions are unresolved. The specification does not pick an answer for any of them.
 
 1. **Capability extensions.** Whether a provider may publish a capability outside the registry, and under what namespace, is undecided.
-2. **Idempotency.** Whether `document_code` plus `commit: true` MUST return the original result instead of committing twice is undecided. `UTCS-6001` covers a document code that is already committed; it does not by itself define a replay rule.
+2. **Idempotency.** [SPECIFICATION.md section 3.6](SPECIFICATION.md#36-commit-replay) specifies commit replay: an equivalent repeated commit returns the original result, and a different request under the same `document_code` is `UTCS-6001`. Still undecided: whether a repeated `void` is a replay, whether a minimum retention period is stated beyond the life of the document, and whether a separate idempotency key is wanted besides `document_code`.
 3. **Bulk operations.** No batch operation is specified. Whether one is required is undecided.
 4. **Synchronous e-invoicing.** `elr-reporting` is not a capability in this version. How a synchronous government acknowledgement would interact with checkout is undecided. `UTCS-8001` and `UTCS-8002` are reserved codes only.
 5. **Multiple providers.** Whether one merchant may split capabilities across providers, and how a consumer would discover that split, is undecided.

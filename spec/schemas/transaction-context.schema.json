@@ -17,7 +17,7 @@
     },
     "document_code": {
       "type": "string",
-      "description": "The caller's key for this transaction when the caller sends one. Optional. A caller SHOULD send it when commit is true: UTCS-6001 rejects a repeated commit of that code, and without it a retry is a new document. When the caller omits it, the provider MAY generate a document_code. The Tax Result always returns one: the caller's value if sent, otherwise the generated value. Used for idempotency and reconciliation."
+      "description": "The caller's key for this transaction when the caller sends one. Optional. A caller SHOULD send it when commit is true: repeating an equivalent commit returns the original result, a different request under the same code is rejected with UTCS-6001, and without it a retry is a new document. See SPECIFICATION.md section 3.6. When the caller omits it, the provider MAY generate a document_code. The Tax Result always returns one: the caller's value if sent, otherwise the generated value. Used for idempotency and reconciliation."
     },
     "company_code": {
       "type": "string",

@@ -18,7 +18,7 @@
     { "code": "UTCS-5002", "category": "exemption", "summary": "Exemption certificate expired" },
     { "code": "UTCS-5003", "category": "exemption", "summary": "Exemption not valid for the jurisdiction" },
     { "code": "UTCS-5004", "category": "exemption", "summary": "Exemption not valid for the product" },
-    { "code": "UTCS-6001", "category": "document", "summary": "Document code already committed" },
+    { "code": "UTCS-6001", "category": "document", "summary": "Document code already committed and the request is not a replay" },
     { "code": "UTCS-6002", "category": "document", "summary": "Document not found for void or adjustment" },
     { "code": "UTCS-7001", "category": "cross_border", "summary": "HS code classification failed. Reserved. cross-border is not a capability in this version." },
     { "code": "UTCS-7002", "category": "cross_border", "summary": "Country of origin required but not provided. Reserved. cross-border is not a capability in this version." },

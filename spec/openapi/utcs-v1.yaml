@@ -182,7 +182,16 @@ paths:
                       description: "Blue stainless steel widget"
       responses:
         "200":
-          description: Tax calculated successfully
+          description: |
+            Tax calculated successfully. On a commit replay (SPECIFICATION.md section 3.6)
+            the body is the original Tax Result, unchanged, and the provider SHOULD set
+            `X-UTCS-Replayed: true`.
+          headers:
+            X-UTCS-Replayed:
+              description: Present with the value `true` when the response is the stored result of an earlier equivalent commit.
+              schema:
+                type: string
+                enum: ["true"]
           content:
             application/json:
               schema:
@@ -195,6 +204,12 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: Authentication error (UTCS-2xxx)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Document code already committed by a different request, or the committed document is no longer in status committed (UTCS-6001). An equivalent repeated commit is a replay and returns 200.
           content:
             application/json:
               schema:
@@ -1135,7 +1150,7 @@ components:
           enum: [sale, return, purchase_order, inventory_transfer, void]
         document_code:
           type: string
-          description: The caller's key for this transaction when the caller sends one. Optional. A caller SHOULD send it when commit is true, because UTCS-6001 rejects a repeated commit of that code and without it a retry is a new document. When omitted, the provider may generate a document_code. The Tax Result always returns one, the caller's value if sent, otherwise the generated value.
+          description: The caller's key for this transaction when the caller sends one. Optional. A caller SHOULD send it when commit is true. Repeating an equivalent commit returns the original result, a different request under the same code is rejected with UTCS-6001, and without a code a retry is a new document. When omitted, the provider may generate a document_code. The Tax Result always returns one, the caller's value if sent, otherwise the generated value.
         company_code:
           type: string
           description: Identifier of the selling entity the transaction belongs to. Routes to the correct registered entity (nexus, registration, reporting).
